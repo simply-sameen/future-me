@@ -15,6 +15,7 @@ interface AppContextValue {
   loginAsDemo: () => void
   logout: () => void
   register: (email: string, password: string, name: string) => Promise<void>
+  login: (email: string, password: string) => Promise<void>
 
   showMomentumModal: boolean
   closeMomentumModal: () => void
@@ -95,17 +96,121 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (data.user) {
+      const avatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + email
+      
+      // Insert to our users table upon registration
+      await supabase.from('users').insert({
+        id: data.user.id,
+        name: data.user.user_metadata?.name || name || email.split('@')[0],
+        email: data.user.email || email,
+        avatar: avatar,
+        is_demo_user: false
+      })
+
       setUser({
         id: data.user.id,
         name: data.user.user_metadata?.name || name || email.split('@')[0],
         email: data.user.email || email,
-        avatar: data.user.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + email,
+        avatar: avatar,
         isDemoUser: false
       })
       setIsDemoMode(false)
       setIsPremium(false)
       setGoals([])
       setReminders([])
+      setCurrentPage('dashboard')
+    }
+  }, [])
+
+  const login = useCallback(async (email: string, password: string) => {
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (authError) {
+      console.error('Login error:', authError.message)
+      throw authError
+    }
+
+    if (authData.user) {
+      // Check if user exists in the users table
+      const { data: profile } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single()
+
+      let userName = authData.user.user_metadata?.name || email.split('@')[0]
+      let userAvatar = authData.user.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + email
+
+      if (!profile) {
+        // Insert user profile into the users table if not exists
+        await supabase.from('users').insert({
+          id: authData.user.id,
+          name: userName,
+          email: authData.user.email || email,
+          avatar: userAvatar,
+          is_demo_user: false
+        })
+      } else {
+        userName = profile.name || userName
+        userAvatar = profile.avatar || userAvatar
+      }
+
+      setUser({
+        id: authData.user.id,
+        name: userName,
+        email: authData.user.email || email,
+        avatar: userAvatar,
+        isDemoUser: false
+      })
+
+      // Fetch existing goals
+      const { data: fetchedGoals } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', authData.user.id)
+        .order('created_at', { ascending: false })
+
+      if (fetchedGoals) {
+        setGoals(fetchedGoals.map(g => ({
+          id: g.id,
+          title: g.title,
+          description: g.description,
+          category: g.category,
+          progress: g.progress,
+          etcDays: g.etc_days,
+          color: g.color,
+          subGoals: g.sub_goals || [],
+          createdAt: g.created_at
+        })))
+      } else {
+        setGoals([])
+      }
+
+      // Fetch existing reminders
+      const { data: fetchedReminders } = await supabase
+        .from('reminders')
+        .select('*')
+        .eq('user_id', authData.user.id)
+
+      if (fetchedReminders) {
+        setReminders(fetchedReminders.map(r => ({
+          id: r.id,
+          title: r.title,
+          message: r.message,
+          scheduledDate: r.scheduled_date,
+          scheduledTime: r.scheduled_time,
+          repeat: r.repeat,
+          isActive: r.is_active
+        })))
+      } else {
+        setReminders([])
+      }
+
+      setIsDemoMode(false)
+      setIsPremium(false)
       setCurrentPage('dashboard')
     }
   }, [])
@@ -120,6 +225,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addGoal = useCallback(async (goal: Omit<Goal, 'id' | 'createdAt'>) => {
     if (!user) return;
+
+    if (isDemoMode) {
+      setGoals(prev => [{
+        id: 'demo-goal-' + Date.now(),
+        title: goal.title,
+        description: goal.description,
+        category: goal.category,
+        progress: goal.progress,
+        etcDays: goal.etcDays,
+        color: goal.color,
+        subGoals: goal.subGoals,
+        createdAt: new Date().toISOString()
+      }, ...prev]);
+      return;
+    }
+
     const { data, error } = await supabase.from('goals').insert({
       user_id: user.id,
       title: goal.title,
@@ -149,7 +270,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         createdAt: data.created_at
       }, ...prev]);
     }
-  }, [user])
+  }, [user, isDemoMode])
 
   const updateGoalProgress = useCallback(async (id: string, progress: number) => {
     const { error } = await supabase.from('goals').update({ progress }).eq('id', id);
@@ -198,6 +319,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addReminder = useCallback(async (reminder: Omit<Reminder, 'id'>) => {
     if (!user) return;
+
+    if (isDemoMode) {
+      setReminders(prev => [{
+        id: 'demo-reminder-' + Date.now(),
+        ...reminder
+      }, ...prev]);
+      return;
+    }
+
     const { data, error } = await supabase.from('reminders').insert({
       user_id: user.id,
       title: reminder.title,
@@ -224,7 +354,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         isActive: data.is_active
       }, ...prev])
     }
-  }, [user])
+  }, [user, isDemoMode])
 
   const toggleReminder = useCallback(async (id: string) => {
     setReminders(prev => {
@@ -279,6 +409,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loginAsDemo,
       logout,
       register,
+      login,
       showMomentumModal,
       closeMomentumModal,
       dashboardTab,

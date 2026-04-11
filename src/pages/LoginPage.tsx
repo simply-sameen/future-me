@@ -5,7 +5,7 @@ import { Input } from '../components/ui/input'
 import { useApp } from '../contexts/AppContext'
 
 export function LoginPage() {
-  const { loginAsDemo, register } = useApp()
+  const { loginAsDemo, register, login } = useApp()
   const [isSignUp, setIsSignUp] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -25,10 +25,15 @@ export function LoginPage() {
         setIsLoading(false)
       }
     } else {
-      // we only have demo login for now, but user can be sent to some real login function if implemented. 
-      // User only asked to update registration logic
-      // let's just default to demo login if sign-in for now
-      loginAsDemo()
+      if (!email || !password) return alert('Please fill in all fields')
+      try {
+        setIsLoading(true)
+        await login(email, password)
+      } catch (error: any) {
+        alert(error.message || 'Login failed')
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
