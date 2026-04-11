@@ -99,13 +99,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const avatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + email
       
       // Insert to our users table upon registration
-      await supabase.from('users').insert({
+      const { error: insertError } = await supabase.from('users').insert({
         id: data.user.id,
         name: data.user.user_metadata?.name || name || email.split('@')[0],
         email: data.user.email || email,
         avatar: avatar,
         is_demo_user: false
       })
+      if (insertError) console.error('Supabase Error:', insertError)
 
       setUser({
         id: data.user.id,
@@ -146,13 +147,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       if (!profile) {
         // Insert user profile into the users table if not exists
-        await supabase.from('users').insert({
+        const { error: insertError } = await supabase.from('users').insert({
           id: authData.user.id,
           name: userName,
           email: authData.user.email || email,
           avatar: userAvatar,
           is_demo_user: false
         })
+        if (insertError) console.error('Supabase Error:', insertError)
       } else {
         userName = profile.name || userName
         userAvatar = profile.avatar || userAvatar
@@ -253,7 +255,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }).select().single();
 
     if (error) {
-      console.error('Error adding goal:', error.message);
+      console.error('Supabase Error:', error);
       return;
     }
 
@@ -339,7 +341,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }).select().single();
 
     if (error) {
-      console.error('Error adding reminder:', error.message);
+      console.error('Supabase Error:', error);
       return;
     }
 
