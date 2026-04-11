@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '../ui/button'
-import { X, Sparkles, Send, CircleAlert as AlertCircle } from 'lucide-react'
+import { X, Sparkles, Send } from 'lucide-react'
 import type { Goal } from '../../types'
 
 interface GoalAIModalProps {
@@ -102,32 +102,32 @@ Provide a concise, actionable response.`
         </div>
 
         <div className="p-5 border-t space-y-3" style={{ borderTopColor: '#262626' }}>
-            <textarea
-              placeholder="Ask for help breaking down this goal, strategies, or tips..."
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              disabled={isLoading}
-              className="w-full p-3 rounded-lg text-sm bg-input border-border text-foreground placeholder:text-muted-foreground disabled:opacity-50 resize-none"
-              rows={3}
-            />
-            <Button
-              onClick={handleAsk}
-              disabled={!query.trim() || isLoading}
-              className="w-full h-10 btn-neon-pink border-none font-bold disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                  <span>Thinking...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  <span>Ask AI</span>
-                </>
-              )}
-            </Button>
-          </div>
+          <textarea
+            placeholder="Ask for help breaking down this goal, strategies, or tips..."
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            disabled={isLoading}
+            className="w-full p-3 rounded-lg text-sm bg-input border-border text-foreground placeholder:text-muted-foreground disabled:opacity-50 resize-none"
+            rows={3}
+          />
+          <Button
+            onClick={handleAsk}
+            disabled={!query.trim() || isLoading}
+            className="w-full h-10 btn-neon-pink border-none font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                <span>Thinking...</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4" />
+                <span>Ask AI</span>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   )
