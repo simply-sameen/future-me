@@ -39,24 +39,16 @@ export function AIAssistantView() {
         ? `\n\nUser's current goals: ${goals.map(g => `"${g.title}"`).join(', ')}`
         : ''
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            goalTitle: 'General Assistance',
-            goalDescription: input + context,
-            subGoals: goals.slice(0, 3).map(g => ({
-              title: g.title,
-              estimatedDays: g.etcDays,
-            })),
-          }),
-        }
-      )
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: input,
+          context: context,
+        }),
+      })
 
       if (!response.ok) {
         throw new Error('Failed to get response')
@@ -66,7 +58,7 @@ export function AIAssistantView() {
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: data.advice || 'No response generated',
+        content: data.response || 'No response generated',
       }
       setMessages(prev => [...prev, assistantMessage])
     } catch (error) {
