@@ -1,33 +1,24 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export default async function handler(req: Request) {
+export default async function handler(req: any, res: any) {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 200 });
+    return res.status(200).send('ok');
   }
 
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { prompt, context } = await req.json();
+    const { prompt, context } = req.body || {};
 
     if (!prompt) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required field: prompt' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return res.status(400).json({ error: 'Missing required field: prompt' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: 'AI service not configured' }),
-        { status: 503, headers: { 'Content-Type': 'application/json' } }
-      );
+      return res.status(503).json({ error: 'AI service not configured' });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -43,18 +34,12 @@ export default async function handler(req: Request) {
     const response = await result.response;
     const text = response.text();
 
-    return new Response(
-      JSON.stringify({ response: text }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return res.status(200).json({ response: text });
   } catch (error) {
     console.error('Gemini Error:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to generate response',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return res.status(500).json({
+      error: 'Failed to generate response',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 }
