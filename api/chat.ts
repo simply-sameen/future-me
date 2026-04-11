@@ -1,9 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export const config = {
-  runtime: 'edge',
-};
-
 export default async function handler(req: Request) {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { status: 200 });
@@ -37,10 +33,10 @@ export default async function handler(req: Request) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const systemContext = context 
-      ? `You are an expert goal-achievement coach. The user's active goals are:\n${context}\n\n` 
+    const systemContext = context
+      ? `You are an expert goal-achievement coach. The user's active goals are:\n${context}\n\n`
       : 'You are a helpful, expert AI coach.';
-    
+
     const fullPrompt = `${systemContext}\nUser Request: ${prompt}`;
 
     const result = await model.generateContent(fullPrompt);
