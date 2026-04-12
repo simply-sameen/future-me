@@ -528,7 +528,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         reminders.forEach(reminder => {
           if (!reminder.isActive) return;
 
-          const isMatch = (reminder.scheduledDate === localDate && reminder.scheduledTime === currentTime);
+          const reminderTimeFormatted = reminder.scheduledTime?.substring(0, 5);
+          const isMatch = (reminder.scheduledDate === localDate && reminderTimeFormatted === currentTime);
           // prevent duplicate triggers within the same minute for the same reminder
           const alreadyTriggered = prev.some(n => 
             n.id.startsWith(reminder.id) && n.time.includes(localDate) && n.time.includes(currentTime)
