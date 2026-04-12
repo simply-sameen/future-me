@@ -14,7 +14,7 @@ const COLOR_CONFIG = {
     glow: 'rgba(255,105,180,0.2)',
     accent: '#FF69B4',
     badge: 'rgba(255,105,180,0.15)',
-    badgeText: '#FF69B4',
+    badgeText: '#ff69b4',
   },
   blue: {
     gradient: 'linear-gradient(135deg, rgba(137,207,240,0.15), rgba(137,207,240,0.05))',

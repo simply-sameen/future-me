@@ -7,15 +7,17 @@ interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
+  timestamp?: number
 }
 
 export function AIAssistantView() {
-  const { goals } = useApp()
+  const { goals, reminders } = useApp()
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
       content: 'Hello! I\'m your AI assistant here to help you break down goals, create strategies, and stay motivated. For specific goal coaching, use the "Coach" button on each goal card. How can I help you today?',
+      timestamp: Date.now(),
     },
   ])
   const [input, setInput] = useState('')
@@ -28,6 +30,7 @@ export function AIAssistantView() {
       id: `user-${Date.now()}`,
       role: 'user',
       content: input,
+      timestamp: Date.now(),
     }
 
     setMessages(prev => [...prev, userMessage])
@@ -35,10 +38,6 @@ export function AIAssistantView() {
     setIsLoading(true)
 
     try {
-      const context = goals.length > 0
-        ? `\n\nUser's current goals: ${goals.map(g => `"${g.title}"`).join(', ')}`
-        : ''
-
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -46,7 +45,8 @@ export function AIAssistantView() {
         },
         body: JSON.stringify({
           prompt: input,
-          context: context,
+          goalsData: JSON.stringify(goals.map(g => ({ title: g.title, desc: g.description, priority: g.priority }))),
+          remindersData: JSON.stringify(reminders.map(r => ({ title: r.title, date: r.date }))),
         }),
       })
 
@@ -59,6 +59,7 @@ export function AIAssistantView() {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
         content: data.response || 'No response generated',
+        timestamp: Date.now(),
       }
       setMessages(prev => [...prev, assistantMessage])
     } catch (error) {
@@ -66,6 +67,7 @@ export function AIAssistantView() {
         id: `error-${Date.now()}`,
         role: 'assistant',
         content: `Error: ${error instanceof Error ? error.message : 'Failed to get response'}`,
+        timestamp: Date.now(),
       }
       setMessages(prev => [...prev, errorMessage])
     } finally {
@@ -74,94 +76,98 @@ export function AIAssistantView() {
   }
 
   return (
-    <div className="p-6 flex flex-col h-full">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, rgba(255,105,180,0.15), rgba(137,207,240,0.15))' }}
-          >
-            <Sparkles className="w-5 h-5 text-neon-pink" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">AI Assistant</h2>
-            <p className="text-sm text-muted-foreground">General guidance and strategy</p>
-          </div>
+    <div className="flex flex-col h-full bg-[#313338] text-[#dbdee1] rounded-lg overflow-hidden">
+      <div className="p-4 border-b border-[#2b2d31] shadow-sm flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-neon-pink/20 flex items-center justify-center">
+          <Sparkles className="w-4 h-4 text-neon-pink" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-white">AI Assistant</h2>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto mb-4 space-y-4 rounded-lg p-4" style={{ background: '#0A0A0A', border: '1px solid #262626' }}>
+      <div className="flex-1 overflow-y-auto space-y-1 py-4">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full py-12 text-center">
-            <MessageCircle className="w-12 h-12 text-muted-foreground mb-3 opacity-50" />
-            <p className="text-muted-foreground">Start a conversation about your goals</p>
+          <div className="flex flex-col items-center justify-center h-full py-12 text-center text-[#949ba4]">
+            <MessageCircle className="w-12 h-12 mb-3 opacity-50" />
+            <p>Start a conversation about your goals</p>
           </div>
         ) : (
-          messages.map(message => (
-            <div
-              key={message.id}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
+          messages.map((message) => {
+            const isAI = message.role === 'assistant'
+            const timeString = message.timestamp 
+              ? new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) 
+              : 'Just now'
+            
+            return (
               <div
-                className="max-w-xs px-4 py-3 rounded-lg text-sm"
-                style={
-                  message.role === 'user'
-                    ? {
-                        background: 'rgba(255,105,180,0.15)',
-                        border: '1px solid rgba(255,105,180,0.2)',
-                        color: '#fff',
-                      }
-                    : {
-                        background: 'rgba(137,207,240,0.08)',
-                        border: '1px solid rgba(137,207,240,0.2)',
-                        color: '#fff',
-                      }
-                }
+                key={message.id}
+                className="group flex gap-4 px-4 py-1 hover:bg-[#2b2d31] transition-colors"
               >
-                <p className="leading-relaxed">{message.content}</p>
+                <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden bg-[#2b2d31] mt-1">
+                  {isAI ? (
+                    <Sparkles className="w-5 h-5 text-neon-pink" />
+                  ) : (
+                    <div className="w-full h-full bg-indigo-500 flex items-center justify-center text-white font-bold">
+                      U
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-medium text-white hover:underline cursor-pointer">
+                      {isAI ? 'AI Coach' : 'You'}
+                    </span>
+                    <span className="text-xs text-[#949ba4] font-medium">{timeString}</span>
+                  </div>
+                  <div className="text-[15px] leading-relaxed whitespace-pre-wrap">
+                    {message.content}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))
+            )
+          })
         )}
         {isLoading && (
-          <div className="flex justify-start">
-            <div
-              className="px-4 py-3 rounded-lg text-sm flex items-center gap-2"
-              style={{
-                background: 'rgba(137,207,240,0.08)',
-                border: '1px solid rgba(137,207,240,0.2)',
-              }}
-            >
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          <div className="flex gap-4 px-4 py-2 mt-2">
+            <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-[#2b2d31]">
+              <Sparkles className="w-5 h-5 text-neon-pink animate-pulse" />
+            </div>
+             <div className="flex-1 min-w-0 flex items-center">
+              <div className="flex gap-1.5">
+                <div className="w-2 h-2 bg-[#dbdee1] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-[#dbdee1] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-[#dbdee1] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="Ask anything about your goals..."
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyPress={e => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault()
-              handleSendMessage()
-            }
-          }}
-          disabled={isLoading}
-          className="flex-1 px-4 py-3 rounded-lg text-sm bg-input border border-border text-foreground placeholder:text-muted-foreground disabled:opacity-50"
-        />
-        <Button
-          onClick={handleSendMessage}
-          disabled={!input.trim() || isLoading}
-          className="btn-neon-pink border-none font-bold disabled:opacity-50 flex items-center gap-2"
-        >
-          <Send className="w-4 h-4" />
-        </Button>
+      <div className="px-4 pb-6 pt-2">
+        <div className="flex items-center gap-2 bg-[#383a40] rounded-lg px-4 py-1">
+          <input
+            type="text"
+            placeholder="Message AI Coach..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyPress={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                handleSendMessage()
+              }
+            }}
+            disabled={isLoading}
+            className="flex-1 bg-transparent border-none text-[#dbdee1] placeholder:text-[#949ba4] focus:outline-none py-2.5"
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={!input.trim() || isLoading}
+            className="p-2 text-[#b5bac1] hover:text-[#dbdee1] disabled:opacity-50 transition-colors"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   )

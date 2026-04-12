@@ -22,7 +22,7 @@ export function AICoachModal({ goal, isOpen, onClose }: AICoachModalProps) {
     setAdvice('')
 
     try {
-      const response = await fetch('/api/gemini', {
+      const response = await fetch('/api/coach', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -39,8 +39,8 @@ export function AICoachModal({ goal, isOpen, onClose }: AICoachModalProps) {
       )
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to get coaching advice')
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || errData.details || 'Failed to get coaching advice')
       }
 
       const data = await response.json()

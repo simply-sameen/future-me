@@ -10,7 +10,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { prompt, context } = req.body || {};
+    const { prompt, goalsData, remindersData } = req.body || {};
 
     if (!prompt) {
       return res.status(400).json({ error: 'Missing required field: prompt' });
@@ -24,11 +24,9 @@ export default async function handler(req: any, res: any) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const systemContext = context
-      ? `You are an expert goal-achievement coach. The user's active goals are:\n${context}\n\n`
-      : 'You are a helpful, expert AI coach.';
+    const systemContext = `You are the Future Me Productivity Coach. You help users break down tasks and manage time. The user currently has the following active goals: ${goalsData || 'None'} and scheduled reminders: ${remindersData || 'None'}. Use this context to give highly specific, actionable advice. Keep responses concise and motivating.`;
 
-    const fullPrompt = `${systemContext}\nUser Request: ${prompt}`;
+    const fullPrompt = `${systemContext}\n\nUser Message: ${prompt}`;
 
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
