@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Sparkles, Send, MessageCircle } from 'lucide-react'
-import { Button } from '../ui/button'
 import { useApp } from '../../contexts/AppContext'
 
 interface Message {
@@ -45,8 +44,8 @@ export function AIAssistantView() {
         },
         body: JSON.stringify({
           prompt: input,
-          goalsData: JSON.stringify(goals.map(g => ({ title: g.title, desc: g.description, priority: g.priority }))),
-          remindersData: JSON.stringify(reminders.map(r => ({ title: r.title, date: r.date }))),
+          goalsData: JSON.stringify(goals.map(g => ({ title: g.title, desc: g.description, priority: g.category }))),
+          remindersData: JSON.stringify(reminders.map(r => ({ title: r.title, date: r.scheduledDate }))),
         }),
       })
 
@@ -95,10 +94,10 @@ export function AIAssistantView() {
         ) : (
           messages.map((message) => {
             const isAI = message.role === 'assistant'
-            const timeString = message.timestamp 
-              ? new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) 
+            const timeString = message.timestamp
+              ? new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
               : 'Just now'
-            
+
             return (
               <div
                 key={message.id}
@@ -133,7 +132,7 @@ export function AIAssistantView() {
             <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-[#2b2d31]">
               <Sparkles className="w-5 h-5 text-neon-pink animate-pulse" />
             </div>
-             <div className="flex-1 min-w-0 flex items-center">
+            <div className="flex-1 min-w-0 flex items-center">
               <div className="flex gap-1.5">
                 <div className="w-2 h-2 bg-[#dbdee1] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <div className="w-2 h-2 bg-[#dbdee1] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
