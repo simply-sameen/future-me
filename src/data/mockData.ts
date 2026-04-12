@@ -148,20 +148,3 @@ export const DEMO_TICKERS: NewsTicker[] = [
     publishedAt: '2024-12-18',
   },
 ]
-
-export const ADMIN_METRICS: AdminMetrics = {
-  totalUsers: 1247,
-  mrr: 1247,
-  serverCosts: 89,
-  activeGoals: 3891,
-  remindersScheduled: 7432,
-}
-
-export const ANALYTICS_DATA = [
-  { month: 'Sep', goalsCompleted: 2, velocity: 45 },
-  { month: 'Oct', goalsCompleted: 4, velocity: 62 },
-  { month: 'Nov', goalsCompleted: 3, velocity: 58 },
-  { month: 'Dec', goalsCompleted: 7, velocity: 78 },
-  { month: 'Jan', goalsCompleted: 5, velocity: 71 },
-  { month: 'Feb', goalsCompleted: 9, velocity: 91 },
-]

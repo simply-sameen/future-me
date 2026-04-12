@@ -20,7 +20,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { prompt, history, goalsData, remindersData } = req.body || {};
+    const { prompt, history, goalsData, remindersData, mode } = req.body || {};
 
     if (!prompt) {
       return res.status(400).json({ error: 'Missing required field: prompt' });
@@ -35,21 +35,26 @@ export default async function handler(req: any, res: any) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const systemContext = `You are the Future Me Productivity Coach. You help users break down tasks and manage time. The user currently has the following active goals: ${goalsData || 'None'} and scheduled reminders: ${remindersData || 'None'}. Use this context to give highly specific, actionable advice. Keep responses concise and motivating.`;
+    let systemContext: string;
+    if (mode === 'deconstruct') {
+      systemContext = `You are a master planner and goal deconstructor. Break the user's goal into exactly 5 actionable sub-goals. You MUST respect the user's target date — do NOT use a generic 90-day timeline. Calculate realistic estimated days for each sub-goal that fit within the target date. Respond ONLY in valid JSON with this exact schema: { "subGoals": [{ "title": "string", "estimatedDays": number }], "totalDays": number }. Do not include any explanation, markdown, or text outside the JSON object.`;
+    } else {
+      systemContext = `You are the Future Me Productivity Coach. You help users break down tasks and manage time. The user currently has the following active goals: ${goalsData || 'None'} and scheduled reminders: ${remindersData || 'None'}. Use this context to give highly specific, actionable advice. Keep responses concise and motivating.`;
+    }
 
     // Build chat history from the client-provided array (stateless reconstruction)
-    const chatHistory = Array.isArray(history)
+    const chatHistory = (mode === 'deconstruct') ? [] : (Array.isArray(history)
       ? history.map((msg: { role: string; content: string }) => ({
           role: msg.role === 'assistant' ? 'model' : 'user',
           parts: [{ text: msg.content }],
         }))
-      : [];
+      : []);
 
     const chat = model.startChat({
       history: [
         // Inject system context as the first exchange
         { role: 'user', parts: [{ text: `System instructions: ${systemContext}` }] },
-        { role: 'model', parts: [{ text: 'Understood. I\'m your Future Me Productivity Coach. I\'ll use your goals and reminders to provide specific, actionable advice. How can I help?' }] },
+        { role: 'model', parts: [{ text: mode === 'deconstruct' ? 'Understood. I will respond with valid JSON only.' : 'Understood. I\'m your Future Me Productivity Coach. I\'ll use your goals and reminders to provide specific, actionable advice. How can I help?' }] },
         ...chatHistory,
       ],
     });

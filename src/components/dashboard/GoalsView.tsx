@@ -187,6 +187,7 @@ function GoalCard({ goal, onCoachClick, onEditClick }: { goal: Goal; onCoachClic
 }
 
 function GoalModal({ onClose, onAdd, onUpdate, editingGoal }: { onClose: () => void; onAdd: (goal: Goal) => void; onUpdate?: (id: string, updates: Partial<Goal>) => void; editingGoal?: Goal | null }) {
+  const { incrementAiCalls } = useApp()
   const [title, setTitle] = useState(editingGoal?.title || '')
   const [description, setDescription] = useState(editingGoal?.description || '')
   const [targetDate, setTargetDate] = useState(editingGoal?.targetDate || '')
@@ -196,15 +197,67 @@ function GoalModal({ onClose, onAdd, onUpdate, editingGoal }: { onClose: () => v
   const [motivation, setMotivation] = useState(editingGoal?.motivation || '')
   const [isGenerating, setIsGenerating] = useState(false)
   const [generated, setGenerated] = useState(!!editingGoal)
+  const [generatedSubGoals, setGeneratedSubGoals] = useState(editingGoal?.subGoals || [])
+  const [generatedEtcDays, setGeneratedEtcDays] = useState(editingGoal?.etcDays || 90)
 
   const isEditing = !!editingGoal
 
   const handleGenerate = async () => {
     if (!title.trim()) return
     setIsGenerating(true)
-    await new Promise(r => setTimeout(r, 2000))
-    setIsGenerating(false)
-    setGenerated(true)
+    try {
+      const prompt = `Deconstruct this goal: "${title}".
+Description: ${description || 'N/A'}
+Target Date: ${targetDate || 'Not set'}
+Priority: ${priority === 3 ? 'High' : priority === 2 ? 'Medium' : 'Low'}
+Difficulty: ${difficulty}/5
+Obstacles: ${obstacles || 'None specified'}
+Motivation: ${motivation || 'Not specified'}`
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, mode: 'deconstruct' }),
+      })
+
+      if (!response.ok) throw new Error('API request failed')
+
+      const data = await response.json()
+      const text = data.response || ''
+
+      // Extract JSON from the response (handle markdown code blocks)
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0])
+        if (parsed.subGoals && Array.isArray(parsed.subGoals)) {
+          const aiSubGoals = parsed.subGoals.map((sg: any, idx: number) => ({
+            id: `sg-${Date.now()}-${idx + 1}`,
+            title: sg.title,
+            completed: false,
+            estimatedDays: sg.estimatedDays || 14,
+          }))
+          setGeneratedSubGoals(aiSubGoals)
+          setGeneratedEtcDays(parsed.totalDays || aiSubGoals.reduce((sum: number, sg: any) => sum + sg.estimatedDays, 0))
+          setGenerated(true)
+          incrementAiCalls()
+        }
+      }
+    } catch (err) {
+      console.error('Deconstruct error:', err)
+      // Fallback to default sub-goals if AI fails
+      const fallbackSubGoals = [
+        { id: `sg-${Date.now()}-1`, title: `Research and plan your approach to: ${title}`, completed: false, estimatedDays: 7 },
+        { id: `sg-${Date.now()}-2`, title: 'Define measurable milestones and success criteria', completed: false, estimatedDays: 5 },
+        { id: `sg-${Date.now()}-3`, title: 'Build the core habit or skill required', completed: false, estimatedDays: 21 },
+        { id: `sg-${Date.now()}-4`, title: 'Execute the first major phase of your plan', completed: false, estimatedDays: 30 },
+        { id: `sg-${Date.now()}-5`, title: 'Review, iterate, and push toward completion', completed: false, estimatedDays: 30 },
+      ]
+      setGeneratedSubGoals(fallbackSubGoals)
+      setGeneratedEtcDays(90)
+      setGenerated(true)
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const handleSubmit = () => {
@@ -225,14 +278,14 @@ function GoalModal({ onClose, onAdd, onUpdate, editingGoal }: { onClose: () => v
         description: description || `Achieve: ${title}`,
         category: 'Personal',
         progress: 0,
-        etcDays: 90,
+        etcDays: generatedEtcDays,
         color: 'pink',
         targetDate: targetDate || undefined,
         priority,
         difficulty,
         obstacles: obstacles || undefined,
         motivation: motivation || undefined,
-        subGoals: [
+        subGoals: generatedSubGoals.length > 0 ? generatedSubGoals : [
           { id: `sg-${Date.now()}-1`, title: `Research and plan your approach to: ${title}`, completed: false, estimatedDays: 7 },
           { id: `sg-${Date.now()}-2`, title: 'Define measurable milestones and success criteria', completed: false, estimatedDays: 5 },
           { id: `sg-${Date.now()}-3`, title: 'Build the core habit or skill required', completed: false, estimatedDays: 21 },

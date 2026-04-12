@@ -1,23 +1,17 @@
-import { useState } from 'react'
-import { Users, DollarSign, Server, Target, Bell, ArrowLeft, Send, TriangleAlert as AlertTriangle, Heart, Users as Users2, Sparkles, TrendingUp, Zap } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Users, DollarSign, Server, Target, Bell, ArrowLeft, Send, TriangleAlert as AlertTriangle, Heart, Users as Users2, Sparkles, TrendingUp, Zap, Bug } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../components/ui/chart'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { useApp } from '../contexts/AppContext'
-import { ADMIN_METRICS } from '../data/mockData'
+import { supabase } from '../lib/supabaseClient'
+import { toast } from 'sonner'
 import type { TickerCategory, NewsTicker } from '../types'
 import type { ChartConfig } from '../components/ui/chart'
 
-const growthData = [
-  { month: 'Jul', users: 320 },
-  { month: 'Aug', users: 580 },
-  { month: 'Sep', users: 740 },
-  { month: 'Oct', users: 890 },
-  { month: 'Nov', users: 1050 },
-  { month: 'Dec', users: 1247 },
-]
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 const growthConfig: ChartConfig = {
   users: { label: 'Users', color: '#FF69B4' },
@@ -75,15 +69,124 @@ export function AdminPage() {
   const [selectedCategory, setSelectedCategory] = useState<TickerCategory>('community')
   const [published, setPublished] = useState(false)
 
-  const metrics = isDemoMode ? ADMIN_METRICS : {
-    totalUsers: 1,
-    mrr: 0,
-    serverCosts: 50,
-    activeGoals: goals.length,
-    remindersScheduled: reminders.length,
+  // Supabase-driven state
+  const [appSettings, setAppSettings] = useState<{ social_cue: string; total_ai_calls: number } | null>(null)
+  const [socialCueInput, setSocialCueInput] = useState('')
+  const [totalUsers, setTotalUsers] = useState(0)
+  const [userGrowthData, setUserGrowthData] = useState<{ month: string; users: number }[]>([])
+  const [isSavingCue, setIsSavingCue] = useState(false)
+
+  // Fetch app_settings and user data on mount
+  useEffect(() => {
+    async function fetchAdminData() {
+      try {
+        // Fetch app_settings
+        const { data: settings } = await supabase
+          .from('app_settings')
+          .select('social_cue, total_ai_calls')
+          .eq('id', 1)
+          .single()
+
+        if (settings) {
+          setAppSettings(settings)
+          setSocialCueInput(settings.social_cue || '')
+        }
+
+        // Fetch users for count and growth graph
+        const { data: users } = await supabase
+          .from('users')
+          .select('id, created_at')
+
+        if (users) {
+          setTotalUsers(users.length)
+
+          // Group users by month for growth chart (cumulative)
+          const monthMap: Record<string, number> = {}
+          const now = new Date()
+          for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+            const key = `${d.getFullYear()}-${d.getMonth()}`
+            monthMap[key] = 0
+          }
+
+          users.forEach(u => {
+            const created = new Date(u.created_at)
+            const key = `${created.getFullYear()}-${created.getMonth()}`
+            if (monthMap[key] !== undefined) {
+              monthMap[key] += 1
+            }
+          })
+
+          // Build cumulative growth
+          let cumulative = 0
+          const sortedEntries = Object.entries(monthMap).sort(([a], [b]) => {
+            const [ay, am] = a.split('-').map(Number)
+            const [by, bm] = b.split('-').map(Number)
+            return ay !== by ? ay - by : am - bm
+          })
+
+          // Count users from before our window
+          const earliestKey = sortedEntries[0]?.[0]
+          if (earliestKey) {
+            const [ey, em] = earliestKey.split('-').map(Number)
+            const earliestDate = new Date(ey, em, 1)
+            cumulative = users.filter(u => new Date(u.created_at) < earliestDate).length
+          }
+
+          const growthData = sortedEntries.map(([key, count]) => {
+            cumulative += count
+            const [, m] = key.split('-').map(Number)
+            return { month: MONTH_NAMES[m], users: cumulative }
+          })
+
+          setUserGrowthData(growthData)
+        }
+      } catch (err) {
+        console.error('Admin data fetch error:', err)
+      }
+    }
+
+    if (!isDemoMode) {
+      fetchAdminData()
+    } else {
+      // Demo mode defaults
+      setTotalUsers(1247)
+      setAppSettings({ social_cue: 'Welcome to Future Me!', total_ai_calls: 42 })
+      setSocialCueInput('Welcome to Future Me!')
+      setUserGrowthData([
+        { month: 'Jul', users: 320 },
+        { month: 'Aug', users: 580 },
+        { month: 'Sep', users: 740 },
+        { month: 'Oct', users: 890 },
+        { month: 'Nov', users: 1050 },
+        { month: 'Dec', users: 1247 },
+      ])
+    }
+  }, [isDemoMode])
+
+  const handleSaveSocialCue = async () => {
+    if (isDemoMode) {
+      setAppSettings(prev => prev ? { ...prev, social_cue: socialCueInput } : null)
+      toast.success('Social cue updated (demo mode)')
+      return
+    }
+    setIsSavingCue(true)
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .update({ social_cue: socialCueInput })
+        .eq('id', 1)
+      if (error) throw error
+      setAppSettings(prev => prev ? { ...prev, social_cue: socialCueInput } : null)
+      toast.success('Social cue saved to database!')
+    } catch (err) {
+      toast.error('Failed to save social cue')
+    } finally {
+      setIsSavingCue(false)
+    }
   }
 
-  const aiTokenUsageThisMonth = 0
+  const aiCallsCount = appSettings?.total_ai_calls || 0
 
   const handlePublish = () => {
     if (!tickerMessage.trim()) return
@@ -100,7 +203,22 @@ export function AdminPage() {
     setTimeout(() => setPublished(false), 3000)
   }
 
-  const profit = metrics.mrr - metrics.serverCosts
+  const serverCosts = 50
+  const mrr = isDemoMode ? 1247 : 0
+  const profit = mrr - serverCosts
+
+  const triggerTestToast = () => {
+    toast.success('Test Toast Successful!')
+  }
+
+  const triggerTestNotification = () => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('Debug Mode', { body: 'Test Notification Successful!' })
+      toast.success('Native notification triggered!')
+    } else {
+      toast.error('Notification permission denied or unavailable.')
+    }
+  }
 
   return (
     <div
@@ -151,19 +269,12 @@ export function AdminPage() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-          <MetricCard icon={Users} label="Total Users" value={metrics.totalUsers} sub="+12% this month" color="#FF69B4" />
-          <MetricCard icon={DollarSign} label="Monthly Revenue" value={metrics.mrr} sub="$1/user/mo" color="#89CFF0" prefix="$" />
-          <MetricCard icon={Server} label="Server Costs" value={metrics.serverCosts} sub="AWS + hosting" color="#f97316" prefix="$" />
-          <MetricCard icon={Target} label="Active Goals" value={metrics.activeGoals} sub="across all users" color="#86efac" />
-          <MetricCard icon={Bell} label="Reminders" value={metrics.remindersScheduled} sub="scheduled total" color="#c084fc" />
-          <MetricCard
-            icon={Zap}
-            label="AI Tokens Used"
-            value={Math.floor((aiTokenUsageThisMonth / 1500000) * 100)}
-            sub="of 1.5M free/month"
-            color="#fbbf24"
-            prefix=""
-          />
+          <MetricCard icon={Users} label="Total Users" value={totalUsers} sub={isDemoMode ? '+12% this month' : 'live count'} color="#FF69B4" />
+          <MetricCard icon={DollarSign} label="Monthly Revenue" value={mrr} sub="$1/user/mo" color="#89CFF0" prefix="$" />
+          <MetricCard icon={Server} label="Server Costs" value={serverCosts} sub="AWS + hosting" color="#f97316" prefix="$" />
+          <MetricCard icon={Target} label="Active Goals" value={goals.length} sub="across all users" color="#86efac" />
+          <MetricCard icon={Bell} label="Reminders" value={reminders.length} sub="scheduled total" color="#c084fc" />
+          <MetricCard icon={Zap} label="AI Calls" value={aiCallsCount} sub="total requests" color="#fbbf24" />
         </div>
 
         <div className="grid lg:grid-cols-[1fr_380px] gap-6 mb-8">
@@ -178,11 +289,11 @@ export function AdminPage() {
                 className="text-xs border-none ml-auto"
                 style={{ background: 'rgba(134,239,172,0.15)', color: '#86efac' }}
               >
-                +289% YoY
+                {totalUsers} total
               </Badge>
             </div>
             <ChartContainer config={growthConfig} className="h-52 w-full">
-              <AreaChart data={growthData}>
+              <AreaChart data={userGrowthData}>
                 <defs>
                   <linearGradient id="userGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#FF69B4" stopOpacity={0.3} />
@@ -209,7 +320,7 @@ export function AdminPage() {
               { label: 'Premium Users', value: isDemoMode ? '19%' : '0%', color: '#FF69B4' },
               { label: 'Conversion Rate', value: isDemoMode ? '19%' : '0%', color: '#89CFF0' },
               { label: 'Avg Goals/User', value: isDemoMode ? '3.1' : ((goals.length > 0 ? goals.length : 0).toString()), color: '#86efac' },
-              { label: 'AI Token Usage', value: `${Math.floor((aiTokenUsageThisMonth / 1500000) * 100)}%`, color: '#fbbf24' },
+              { label: 'AI API Calls', value: aiCallsCount.toString(), color: '#fbbf24' },
             ].map(stat => (
               <div key={stat.label} className="flex items-center justify-between py-2.5"
                 style={{ borderBottom: '1px solid #1A1A1A' }}
@@ -225,14 +336,15 @@ export function AdminPage() {
             >
               <p className="text-xs text-muted-foreground">Net Profit Margin</p>
               <p className="text-2xl font-black" style={{ color: '#86efac' }}>
-                {Math.round((profit / metrics.mrr) * 100)}%
+                {mrr > 0 ? Math.round((profit / mrr) * 100) : 0}%
               </p>
             </div>
           </div>
         </div>
 
+        {/* Social Cue Broadcaster — Supabase Connected */}
         <div
-          className="rounded-xl p-6"
+          className="rounded-xl p-6 mb-8"
           style={{ background: '#0A0A0A', border: '1px solid #262626' }}
         >
           <div className="flex items-center gap-3 mb-5">
@@ -244,10 +356,38 @@ export function AdminPage() {
             </div>
             <div>
               <h3 className="font-bold text-foreground">Social Cue Broadcaster</h3>
-              <p className="text-xs text-muted-foreground">Publish news tickers to the user dashboard</p>
+              <p className="text-xs text-muted-foreground">Publish news tickers & persist the social cue to Supabase</p>
             </div>
           </div>
 
+          {/* Persistent Social Cue */}
+          <div className="mb-5 p-4 rounded-lg" style={{ background: '#141414', border: '1px solid #262626' }}>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+              Global Social Cue (Saved to DB)
+            </label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter the global social cue message..."
+                value={socialCueInput}
+                onChange={e => setSocialCueInput(e.target.value)}
+                className="border-border bg-input text-foreground placeholder:text-muted-foreground h-10 flex-1"
+              />
+              <Button
+                onClick={handleSaveSocialCue}
+                disabled={isSavingCue || socialCueInput === (appSettings?.social_cue || '')}
+                className="h-10 px-4 font-bold btn-neon-blue border-none disabled:opacity-50 text-sm"
+              >
+                {isSavingCue ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+            {appSettings?.social_cue && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Current: <span className="text-foreground/70">{appSettings.social_cue}</span>
+              </p>
+            )}
+          </div>
+
+          {/* Ticker Publisher */}
           <div className="grid md:grid-cols-[1fr_auto] gap-4 mb-5">
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
@@ -337,6 +477,44 @@ export function AdminPage() {
               })}
             </div>
           )}
+        </div>
+
+        {/* System Debug Section */}
+        <div
+          className="rounded-xl p-6 mb-8"
+          style={{ background: '#0A0A0A', border: '1px solid rgba(251,191,36,0.2)' }}
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)' }}
+            >
+              <Bug className="w-5 h-5" style={{ color: '#fbbf24' }} />
+            </div>
+            <div>
+              <h3 className="font-bold text-foreground">System Debug</h3>
+              <p className="text-xs text-muted-foreground">Test internal systems — toast notifications & browser alerts</p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              onClick={triggerTestToast}
+              className="h-10 px-5 font-bold border-none text-sm"
+              style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Test Toast
+            </Button>
+            <Button
+              onClick={triggerTestNotification}
+              className="h-10 px-5 font-bold border-none text-sm"
+              style={{ background: 'rgba(137,207,240,0.15)', color: '#89CFF0', border: '1px solid rgba(137,207,240,0.3)' }}
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              Test Notification
+            </Button>
+          </div>
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-8">

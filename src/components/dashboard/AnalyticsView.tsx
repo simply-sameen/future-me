@@ -1,15 +1,17 @@
+import { useMemo } from 'react'
 import { Lock, Zap, TrendingUp, Target, CircleCheck as CheckCircle2, ChartBar as BarChart3 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../ui/chart'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts'
 import { useApp } from '../../contexts/AppContext'
-import { ANALYTICS_DATA } from '../../data/mockData'
 import type { ChartConfig } from '../ui/chart'
 
 const velocityConfig: ChartConfig = {
   velocity: { label: 'Velocity Score', color: '#FF69B4' },
   goalsCompleted: { label: 'Goals Completed', color: '#89CFF0' },
 }
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 function StatCard({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
   return (
@@ -66,6 +68,85 @@ export function AnalyticsView() {
   const completedSubGoals = goals.reduce((sum, g) => sum + g.subGoals.filter(sg => sg.completed).length, 0)
   const totalSubGoals = goals.reduce((sum, g) => sum + g.subGoals.length, 0)
 
+  // Compute real velocity score: weighted average of goal progress adjusted by difficulty
+  const velocityScore = useMemo(() => {
+    if (goals.length === 0) return 0
+    const totalWeightedProgress = goals.reduce((sum, g) => {
+      const difficultyWeight = g.difficulty || 3
+      return sum + (g.progress * difficultyWeight)
+    }, 0)
+    const totalWeight = goals.reduce((sum, g) => sum + (g.difficulty || 3), 0)
+    return Math.round(totalWeightedProgress / totalWeight)
+  }, [goals])
+
+  // Compute ETC accuracy: how many goals are on track (progress vs time elapsed)
+  const etcAccuracy = useMemo(() => {
+    if (goals.length === 0) return 0
+    const onTrack = goals.filter(g => {
+      if (!g.createdAt || g.etcDays <= 0) return false
+      const created = new Date(g.createdAt).getTime()
+      const elapsed = (Date.now() - created) / (1000 * 60 * 60 * 24)
+      const expectedProgress = Math.min(100, (elapsed / g.etcDays) * 100)
+      return g.progress >= expectedProgress * 0.7 // Within 70% of expected = on track
+    }).length
+    return Math.round((onTrack / goals.length) * 100)
+  }, [goals])
+
+  // Build chart data from real goals, grouped by month of creation
+  const chartData = useMemo(() => {
+    if (goals.length === 0) {
+      // Show last 6 months with zeros
+      const data = []
+      const now = new Date()
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        data.push({ month: MONTH_NAMES[d.getMonth()], velocity: 0, goalsCompleted: 0 })
+      }
+      return data
+    }
+
+    // Group goals by month
+    const monthMap: Record<string, { totalProgress: number; count: number; completed: number }> = {}
+    const now = new Date()
+
+    // Ensure we always have last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const key = `${d.getFullYear()}-${d.getMonth()}`
+      monthMap[key] = { totalProgress: 0, count: 0, completed: 0 }
+    }
+
+    goals.forEach(g => {
+      const created = new Date(g.createdAt)
+      const key = `${created.getFullYear()}-${created.getMonth()}`
+      if (!monthMap[key]) {
+        monthMap[key] = { totalProgress: 0, count: 0, completed: 0 }
+      }
+      monthMap[key].totalProgress += g.progress
+      monthMap[key].count += 1
+      if (g.progress === 100) {
+        monthMap[key].completed += 1
+      }
+    })
+
+    // Sort by date and map to chart format
+    return Object.entries(monthMap)
+      .sort(([a], [b]) => {
+        const [ay, am] = a.split('-').map(Number)
+        const [by, bm] = b.split('-').map(Number)
+        return ay !== by ? ay - by : am - bm
+      })
+      .slice(-6) // Last 6 months
+      .map(([key, val]) => {
+        const [, m] = key.split('-').map(Number)
+        return {
+          month: MONTH_NAMES[m],
+          velocity: val.count > 0 ? Math.round(val.totalProgress / val.count) : 0,
+          goalsCompleted: val.completed,
+        }
+      })
+  }, [goals])
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -97,8 +178,8 @@ export function AnalyticsView() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label="Avg Progress" value={`${avgProgress}%`} sub="across all goals" color="#FF69B4" />
         <StatCard label="Sub-Goals Done" value={`${completedSubGoals}`} sub={`of ${totalSubGoals} total`} color="#89CFF0" />
-        <StatCard label="Velocity Score" value="78" sub="+12 this month" color="#86efac" />
-        <StatCard label="ETC Accuracy" value="91%" sub="prediction match" color="#f9a8d4" />
+        <StatCard label="Velocity Score" value={`${velocityScore}`} sub={goals.length > 0 ? 'difficulty-weighted' : 'no goals yet'} color="#86efac" />
+        <StatCard label="ETC Accuracy" value={`${etcAccuracy}%`} sub={goals.length > 0 ? 'on-track rate' : 'no goals yet'} color="#f9a8d4" />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
@@ -112,7 +193,7 @@ export function AnalyticsView() {
             <h4 className="text-sm font-bold text-foreground">Velocity Trend</h4>
           </div>
           <ChartContainer config={velocityConfig} className="h-48 w-full">
-            <AreaChart data={ANALYTICS_DATA}>
+            <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="velocityGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#FF69B4" stopOpacity={0.3} />
@@ -144,7 +225,7 @@ export function AnalyticsView() {
             <h4 className="text-sm font-bold text-foreground">Goals Completed / Month</h4>
           </div>
           <ChartContainer config={velocityConfig} className="h-48 w-full">
-            <BarChart data={ANALYTICS_DATA}>
+            <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
               <XAxis dataKey="month" tick={{ fill: '#666', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: '#666', fontSize: 11 }} axisLine={false} tickLine={false} />

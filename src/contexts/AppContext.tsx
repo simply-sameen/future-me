@@ -54,6 +54,8 @@ interface AppContextValue {
 
   notifications: AppNotification[]
   setNotifications: React.Dispatch<React.SetStateAction<AppNotification[]>>
+
+  incrementAiCalls: () => Promise<void>
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined)
@@ -528,6 +530,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setChatMessages([])
   }, [])
 
+  const incrementAiCalls = useCallback(async () => {
+    try {
+      const { data } = await supabase.from('app_settings').select('total_ai_calls').eq('id', 1).single()
+      await supabase.from('app_settings').update({ total_ai_calls: (data?.total_ai_calls || 0) + 1 }).eq('id', 1)
+    } catch (err) {
+      console.error('Failed to increment AI calls:', err)
+    }
+  }, [])
+
   useEffect(() => {
     if (!user) return;
 
@@ -624,6 +635,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       clearChatMessages,
       notifications,
       setNotifications,
+      incrementAiCalls,
     }}>
       {children}
     </AppContext.Provider>

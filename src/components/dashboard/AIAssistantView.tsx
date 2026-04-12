@@ -12,7 +12,7 @@ const GREETING_MESSAGE: ChatMessage = {
 }
 
 export function AIAssistantView() {
-  const { goals, reminders, chatMessages, setChatMessages } = useApp()
+  const { goals, reminders, chatMessages, setChatMessages, incrementAiCalls } = useApp()
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -66,6 +66,7 @@ export function AIAssistantView() {
         timestamp: Date.now(),
       }
       setChatMessages(prev => [...prev, assistantMessage])
+      incrementAiCalls()
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Failed to get response'
       toast.error(`AI API Error: ${errorMsg}`)

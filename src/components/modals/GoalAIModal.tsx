@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button } from '../ui/button'
 import { X, Sparkles, Send } from 'lucide-react'
 import { toast } from 'sonner'
+import { useApp } from '../../contexts/AppContext'
 import type { Goal } from '../../types'
 
 interface GoalAIModalProps {
@@ -15,6 +16,7 @@ export function GoalAIModal({ goal, isOpen, onClose }: GoalAIModalProps) {
   const [response, setResponse] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const { incrementAiCalls } = useApp()
 
   if (!isOpen) return null
 
@@ -59,6 +61,7 @@ Provide a concise, actionable response.`
 
       if (text) {
         setResponse(text)
+        incrementAiCalls()
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'An error occurred'

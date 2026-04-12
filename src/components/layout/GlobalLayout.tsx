@@ -2,9 +2,8 @@ import { NewsTicker } from './NewsTicker'
 import { Sidebar } from './Sidebar'
 import { UserDropdown } from './UserDropdown'
 import { useApp } from '../../contexts/AppContext'
-import { Bell, Menu, X, Bug } from 'lucide-react'
+import { Bell, Menu, X } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
-import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
 interface GlobalLayoutProps {
@@ -41,64 +40,6 @@ function LiveClock() {
   )
 }
 
-function DebugPanel() {
-  const [isOpen, setIsOpen] = useState(false)
-  const panelRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
-
-  const triggerToast = () => {
-    toast.success('Test Toast Successful!')
-    setIsOpen(false)
-  }
-
-  const triggerNotification = () => {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Debug Mode', { body: 'Test Notification Successful!' })
-    } else {
-      toast.error('Notification permission denied or unavailable.')
-    }
-    setIsOpen(false)
-  }
-
-  return (
-    <div ref={panelRef} className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-        style={{ background: '#1a1a1a', border: '1px solid #262626' }}
-        title="Admin/Debug"
-      >
-        <Bug className="w-4 h-4" />
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-[#313338] border border-gray-700 rounded-md shadow-lg z-50 overflow-hidden flex flex-col py-1">
-          <button 
-            onClick={triggerToast}
-            className="px-4 py-2 text-sm text-left text-gray-200 hover:bg-[#2b2d31] transition-colors"
-          >
-            Test Toast
-          </button>
-          <button 
-            onClick={triggerNotification}
-            className="px-4 py-2 text-sm text-left text-gray-200 hover:bg-[#2b2d31] transition-colors"
-          >
-            Test Notification
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
 
 export function GlobalLayout({ children }: GlobalLayoutProps) {
   const { tickers, notifications, setNotifications } = useApp()
@@ -166,7 +107,6 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
 
             <div className="flex items-center gap-3">
               <LiveClock />
-              <DebugPanel />
               <div ref={notificationsRef} className="relative">
                 <button
                   className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors relative"
