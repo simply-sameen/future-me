@@ -3,6 +3,13 @@ import type { Page, DashboardTab, User, Goal, Reminder, NewsTicker } from '../ty
 import { DEMO_USER, DEMO_GOALS, DEMO_REMINDERS, DEMO_TICKERS } from '../data/mockData'
 import { supabase } from '../lib/supabaseClient'
 
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp?: number
+}
+
 interface AppContextValue {
   currentPage: Page
   navigateTo: (page: Page) => void
@@ -39,6 +46,10 @@ interface AppContextValue {
   tickers: NewsTicker[]
   addTicker: (ticker: NewsTicker) => void
   removeTicker: (id: string) => void
+
+  chatMessages: ChatMessage[]
+  setChatMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>
+  clearChatMessages: () => void
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined)
@@ -53,6 +64,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [goals, setGoals] = useState<Goal[]>([])
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [tickers, setTickers] = useState<NewsTicker[]>(DEMO_TICKERS.filter(t => t.isActive))
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
 
   const navigateTo = useCallback((page: Page) => {
     setCurrentPage(page)
@@ -63,6 +75,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsDemoMode(true)
     setGoals(DEMO_GOALS)
     setReminders(DEMO_REMINDERS)
+    setChatMessages([]) // Clear chat history on session start
     setCurrentPage('dashboard')
     setShowMomentumModal(true)
     setDashboardTab('reminders')
@@ -74,6 +87,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsPremium(false)
     setGoals([])
     setReminders([])
+    setChatMessages([]) // Explicitly clear chat history on logout
     setCurrentPage('login')
     setShowMomentumModal(false)
     setDashboardTab('reminders')
@@ -119,6 +133,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setIsPremium(false)
       setGoals([])
       setReminders([])
+      setChatMessages([]) // Clear chat history for fresh registration session
       setCurrentPage('dashboard')
     }
   }, [])
@@ -213,6 +228,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       setIsDemoMode(false)
       setIsPremium(false)
+      setChatMessages([]) // Clear chat history for fresh login session
       setCurrentPage('dashboard')
     }
   }, [])
@@ -397,6 +413,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTickers(prev => prev.filter(t => t.id !== id))
   }, [])
 
+  const clearChatMessages = useCallback(() => {
+    setChatMessages([])
+  }, [])
+
   const isAuthenticated = !!user
 
   return (
@@ -430,6 +450,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       tickers,
       addTicker,
       removeTicker,
+      chatMessages,
+      setChatMessages,
+      clearChatMessages,
     }}>
       {children}
     </AppContext.Provider>

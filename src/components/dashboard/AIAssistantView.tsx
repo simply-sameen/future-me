@@ -1,42 +1,45 @@
 import { useState } from 'react'
 import { Sparkles, Send, MessageCircle } from 'lucide-react'
 import { useApp } from '../../contexts/AppContext'
+import type { ChatMessage } from '../../contexts/AppContext'
 
-interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp?: number
+const GREETING_MESSAGE: ChatMessage = {
+  id: 'greeting',
+  role: 'assistant',
+  content: 'Hello! I\'m your AI assistant here to help you break down goals, create strategies, and stay motivated. For specific goal coaching, use the "Coach" button on each goal card. How can I help you today?',
+  timestamp: Date.now(),
 }
 
 export function AIAssistantView() {
-  const { goals, reminders } = useApp()
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'Hello! I\'m your AI assistant here to help you break down goals, create strategies, and stay motivated. For specific goal coaching, use the "Coach" button on each goal card. How can I help you today?',
-      timestamp: Date.now(),
-    },
-  ])
+  const { goals, reminders, chatMessages, setChatMessages } = useApp()
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  // Display messages: greeting + actual conversation from context
+  const displayMessages = [GREETING_MESSAGE, ...chatMessages]
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return
 
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
       content: input,
       timestamp: Date.now(),
     }
 
-    setMessages(prev => [...prev, userMessage])
+    setChatMessages(prev => [...prev, userMessage])
     setInput('')
     setIsLoading(true)
 
     try {
+      // Send full conversation history so backend can reconstruct context statelessly.
+      // Exclude the static greeting — it's UI-only, not part of the AI conversation.
+      const historyForApi = [...chatMessages, userMessage].map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      }))
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -44,6 +47,7 @@ export function AIAssistantView() {
         },
         body: JSON.stringify({
           prompt: input,
+          history: historyForApi.slice(0, -1), // History is everything before the current message
           goalsData: JSON.stringify(goals.map(g => ({ title: g.title, desc: g.description, priority: g.category }))),
           remindersData: JSON.stringify(reminders.map(r => ({ title: r.title, date: r.scheduledDate }))),
         }),
@@ -54,21 +58,21 @@ export function AIAssistantView() {
       }
 
       const data = await response.json()
-      const assistantMessage: Message = {
+      const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
         content: data.response || 'No response generated',
         timestamp: Date.now(),
       }
-      setMessages(prev => [...prev, assistantMessage])
+      setChatMessages(prev => [...prev, assistantMessage])
     } catch (error) {
-      const errorMessage: Message = {
+      const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
         role: 'assistant',
         content: `Error: ${error instanceof Error ? error.message : 'Failed to get response'}`,
         timestamp: Date.now(),
       }
-      setMessages(prev => [...prev, errorMessage])
+      setChatMessages(prev => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
     }
@@ -86,13 +90,13 @@ export function AIAssistantView() {
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-1 py-4">
-        {messages.length === 0 ? (
+        {displayMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-12 text-center text-[#949ba4]">
             <MessageCircle className="w-12 h-12 mb-3 opacity-50" />
             <p>Start a conversation about your goals</p>
           </div>
         ) : (
-          messages.map((message) => {
+          displayMessages.map((message) => {
             const isAI = message.role === 'assistant'
             const timeString = message.timestamp
               ? new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
