@@ -49,7 +49,7 @@ export function AIAssistantView() {
         body: JSON.stringify({
           prompt: input,
           history: historyForApi.slice(0, -1), // History is everything before the current message
-          goalsData: JSON.stringify(goals.map(g => ({ title: g.title, desc: g.description, priority: g.category }))),
+          goalsData: JSON.stringify(goals.map(g => ({ title: g.title, description: g.description, category: g.category, targetDate: g.targetDate, priority: g.priority, difficulty: g.difficulty, obstacles: g.obstacles, motivation: g.motivation }))),
           remindersData: JSON.stringify(reminders.map(r => ({ title: r.title, date: r.scheduledDate }))),
         }),
       })

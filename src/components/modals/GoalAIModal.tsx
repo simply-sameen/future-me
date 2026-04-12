@@ -26,7 +26,13 @@ export function GoalAIModal({ goal, isOpen, onClose }: GoalAIModalProps) {
     setResponse('')
 
     try {
-      const prompt = `Help me with this goal: "${goal.title}". Context: ${goal.description}.
+      const prompt = `Help me with this goal: "${goal.title}".
+Description: ${goal.description || 'N/A'}
+Target Date: ${goal.targetDate || 'Not set'}
+Priority: ${goal.priority === 3 ? 'High' : goal.priority === 2 ? 'Medium' : goal.priority === 1 ? 'Low' : 'Not set'}
+Difficulty: ${goal.difficulty || 'Not set'}/5
+Obstacles: ${goal.obstacles || 'None specified'}
+Motivation: ${goal.motivation || 'Not specified'}
 
 My specific question: ${query}
 
