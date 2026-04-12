@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '../ui/button'
 import { X, Sparkles, Send } from 'lucide-react'
+import { toast } from 'sonner'
 import type { Goal } from '../../types'
 
 interface GoalAIModalProps {
@@ -54,7 +55,9 @@ Provide a concise, actionable response.`
         setResponse(text)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      const errorMsg = err instanceof Error ? err.message : 'An error occurred'
+      setError(errorMsg)
+      toast.error(`AI API Error: ${errorMsg}`)
     } finally {
       setIsLoading(false)
     }

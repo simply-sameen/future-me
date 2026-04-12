@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Sparkles, Send, MessageCircle } from 'lucide-react'
 import { useApp } from '../../contexts/AppContext'
+import { toast } from 'sonner'
 import type { ChatMessage } from '../../contexts/AppContext'
 
 const GREETING_MESSAGE: ChatMessage = {
@@ -66,10 +67,13 @@ export function AIAssistantView() {
       }
       setChatMessages(prev => [...prev, assistantMessage])
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to get response'
+      toast.error(`AI API Error: ${errorMsg}`)
+      
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: `Error: ${error instanceof Error ? error.message : 'Failed to get response'}`,
+        content: `Error: ${errorMsg}`,
         timestamp: Date.now(),
       }
       setChatMessages(prev => [...prev, errorMessage])

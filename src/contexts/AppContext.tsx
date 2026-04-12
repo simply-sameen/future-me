@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback } from 'react'
 import type { Page, DashboardTab, User, Goal, Reminder, NewsTicker } from '../types'
 import { DEMO_USER, DEMO_GOALS, DEMO_REMINDERS, DEMO_TICKERS } from '../data/mockData'
 import { supabase } from '../lib/supabaseClient'
+import { toast } from 'sonner'
 
 export interface ChatMessage {
   id: string
@@ -76,6 +77,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setGoals(DEMO_GOALS)
     setReminders(DEMO_REMINDERS)
     setChatMessages([]) // Clear chat history on session start
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('chatMessages')
+      sessionStorage.removeItem('chatMessages')
+    }
     setCurrentPage('dashboard')
     setShowMomentumModal(true)
     setDashboardTab('reminders')
@@ -88,6 +93,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setGoals([])
     setReminders([])
     setChatMessages([]) // Explicitly clear chat history on logout
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('chatMessages')
+      sessionStorage.removeItem('chatMessages')
+    }
     setCurrentPage('login')
     setShowMomentumModal(false)
     setDashboardTab('reminders')
@@ -106,6 +115,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     if (error) {
       console.error('Registration error:', error.message)
+      toast.error(`Database Error: ${error.message}`)
       throw error
     }
 
@@ -134,6 +144,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setGoals([])
       setReminders([])
       setChatMessages([]) // Clear chat history for fresh registration session
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('chatMessages')
+        sessionStorage.removeItem('chatMessages')
+      }
+      toast.success('Account created successfully!')
       setCurrentPage('dashboard')
     }
   }, [])
@@ -146,6 +161,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     if (authError) {
       console.error('Login error:', authError.message)
+      toast.error(`Database Error: ${authError.message}`)
       throw authError
     }
 
@@ -229,6 +245,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setIsDemoMode(false)
       setIsPremium(false)
       setChatMessages([]) // Clear chat history for fresh login session
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('chatMessages')
+        sessionStorage.removeItem('chatMessages')
+      }
+      toast.success('Welcome back!')
       setCurrentPage('dashboard')
     }
   }, [])
@@ -259,59 +280,85 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const { data, error } = await supabase.from('goals').insert({
-      user_id: user.id,
-      title: goal.title,
-      description: goal.description,
-      category: goal.category,
-      progress: goal.progress,
-      etc_days: goal.etcDays,
-      color: goal.color,
-      sub_goals: goal.subGoals
-    }).select().single();
+    try {
+      const { data, error } = await supabase.from('goals').insert({
+        user_id: user.id,
+        title: goal.title,
+        description: goal.description,
+        category: goal.category,
+        progress: goal.progress,
+        etc_days: goal.etcDays,
+        color: goal.color,
+        sub_goals: goal.subGoals
+      }).select().single();
 
-    if (error) {
-      console.error('Supabase Error:', error);
-      return;
-    }
+      if (error) {
+        console.error('Supabase Error:', error);
+        toast.error(`Database Error: ${error.message}`);
+        return;
+      }
 
-    if (data) {
-      setGoals(prev => [{
-        id: data.id,
-        title: data.title,
-        description: data.description,
-        category: data.category,
-        progress: data.progress,
-        etcDays: data.etc_days,
-        color: data.color,
-        subGoals: data.sub_goals,
-        createdAt: data.created_at
-      }, ...prev]);
+      if (data) {
+        setGoals(prev => [{
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          progress: data.progress,
+          etcDays: data.etc_days,
+          color: data.color,
+          subGoals: data.sub_goals,
+          createdAt: data.created_at
+        }, ...prev]);
+        toast.success("Goal added successfully!");
+      }
+    } catch (err) {
+      toast.error(`Database Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }, [user, isDemoMode])
 
   const updateGoalProgress = useCallback(async (id: string, progress: number) => {
-    const { error } = await supabase.from('goals').update({ progress }).eq('id', id);
-    if (!error) {
-      setGoals(prev => prev.map(g => g.id === id ? { ...g, progress } : g))
+    try {
+      const { error } = await supabase.from('goals').update({ progress }).eq('id', id);
+      if (error) {
+        toast.error(`Database Error: ${error.message}`);
+      } else {
+        setGoals(prev => prev.map(g => g.id === id ? { ...g, progress } : g));
+      }
+    } catch (err) {
+      toast.error(`Database Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }, [])
 
   const deleteGoal = useCallback(async (id: string) => {
-    const { error } = await supabase.from('goals').delete().eq('id', id);
-    if (!error) {
-      setGoals(prev => prev.filter(g => g.id !== id))
+    try {
+      const { error } = await supabase.from('goals').delete().eq('id', id);
+      if (error) {
+        toast.error(`Database Error: ${error.message}`);
+      } else {
+        setGoals(prev => prev.filter(g => g.id !== id));
+        toast.success("Goal deleted successfully!");
+      }
+    } catch (err) {
+      toast.error(`Database Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }, [])
 
   const updateGoal = useCallback(async (id: string, updates: Partial<Goal>) => {
-    const dbUpdates: any = { ...updates }
-    if (updates.etcDays !== undefined) { dbUpdates.etc_days = updates.etcDays; delete dbUpdates.etcDays }
-    if (updates.subGoals !== undefined) { dbUpdates.sub_goals = updates.subGoals; delete dbUpdates.subGoals }
+    try {
+      const dbUpdates: any = { ...updates }
+      if (updates.etcDays !== undefined) { dbUpdates.etc_days = updates.etcDays; delete dbUpdates.etcDays }
+      if (updates.subGoals !== undefined) { dbUpdates.sub_goals = updates.subGoals; delete dbUpdates.subGoals }
 
-    const { error } = await supabase.from('goals').update(dbUpdates).eq('id', id);
-    if (!error) {
-      setGoals(prev => prev.map(g => g.id === id ? { ...g, ...updates } : g))
+      const { error } = await supabase.from('goals').update(dbUpdates).eq('id', id);
+      if (error) {
+        toast.error(`Database Error: ${error.message}`);
+      } else {
+        setGoals(prev => prev.map(g => g.id === id ? { ...g, ...updates } : g));
+        toast.success("Goal updated successfully!");
+      }
+    } catch (err) {
+      toast.error(`Database Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }, [])
 
@@ -329,7 +376,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from('goals').update({ 
         sub_goals: updatedSubGoals, 
         progress: newProgress 
-      }).eq('id', goalId)
+      }).eq('id', goalId).then(({ error }) => {
+        if (error) {
+          toast.error(`Database Error: ${error.message}`);
+        }
+      });
 
       return prev.map(g => g.id === goalId ? { ...g, subGoals: updatedSubGoals, progress: newProgress } : g)
     })
@@ -346,31 +397,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const { data, error } = await supabase.from('reminders').insert({
-      user_id: user.id,
-      title: reminder.title,
-      message: reminder.message,
-      scheduled_date: reminder.scheduledDate,
-      scheduled_time: reminder.scheduledTime,
-      repeat: reminder.repeat,
-      is_active: reminder.isActive
-    }).select().single();
+    try {
+      const { data, error } = await supabase.from('reminders').insert({
+        user_id: user.id,
+        title: reminder.title,
+        message: reminder.message,
+        scheduled_date: reminder.scheduledDate,
+        scheduled_time: reminder.scheduledTime,
+        repeat: reminder.repeat,
+        is_active: reminder.isActive
+      }).select().single();
 
-    if (error) {
-      console.error('Supabase Error:', error);
-      return;
-    }
+      if (error) {
+        console.error('Supabase Error:', error);
+        toast.error(`Database Error: ${error.message}`);
+        return;
+      }
 
-    if (data) {
-      setReminders(prev => [{
-        id: data.id,
-        title: data.title,
-        message: data.message,
-        scheduledDate: data.scheduled_date,
-        scheduledTime: data.scheduled_time,
-        repeat: data.repeat,
-        isActive: data.is_active
-      }, ...prev])
+      if (data) {
+        setReminders(prev => [{
+          id: data.id,
+          title: data.title,
+          message: data.message,
+          scheduledDate: data.scheduled_date,
+          scheduledTime: data.scheduled_time,
+          repeat: data.repeat,
+          isActive: data.is_active
+        }, ...prev]);
+        toast.success("Reminder added successfully!");
+      }
+    } catch (err) {
+      toast.error(`Database Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }, [user, isDemoMode])
 
@@ -380,28 +437,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!reminder) return prev
       
       const newIsActive = !reminder.isActive
-      supabase.from('reminders').update({ is_active: newIsActive }).eq('id', id)
+      supabase.from('reminders').update({ is_active: newIsActive }).eq('id', id).then(({ error }) => {
+        if (error) {
+          toast.error(`Database Error: ${error.message}`);
+        } else {
+          toast.success(`Reminder ${newIsActive ? 'enabled' : 'disabled'}`);
+        }
+      });
 
       return prev.map(r => r.id === id ? { ...r, isActive: newIsActive } : r)
     })
   }, [])
 
   const deleteReminder = useCallback(async (id: string) => {
-    const { error } = await supabase.from('reminders').delete().eq('id', id)
-    if (!error) {
-      setReminders(prev => prev.filter(r => r.id !== id))
+    try {
+      const { error } = await supabase.from('reminders').delete().eq('id', id)
+      if (error) {
+        toast.error(`Database Error: ${error.message}`);
+      } else {
+        setReminders(prev => prev.filter(r => r.id !== id));
+        toast.success("Reminder deleted successfully!");
+      }
+    } catch (err) {
+      toast.error(`Database Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }, [])
 
   const updateReminder = useCallback(async (id: string, updates: Partial<Reminder>) => {
-    const dbUpdates: any = { ...updates }
-    if (updates.scheduledDate !== undefined) { dbUpdates.scheduled_date = updates.scheduledDate; delete dbUpdates.scheduledDate }
-    if (updates.scheduledTime !== undefined) { dbUpdates.scheduled_time = updates.scheduledTime; delete dbUpdates.scheduledTime }
-    if (updates.isActive !== undefined) { dbUpdates.is_active = updates.isActive; delete dbUpdates.isActive }
+    try {
+      const dbUpdates: any = { ...updates }
+      if (updates.scheduledDate !== undefined) { dbUpdates.scheduled_date = updates.scheduledDate; delete dbUpdates.scheduledDate }
+      if (updates.scheduledTime !== undefined) { dbUpdates.scheduled_time = updates.scheduledTime; delete dbUpdates.scheduledTime }
+      if (updates.isActive !== undefined) { dbUpdates.is_active = updates.isActive; delete dbUpdates.isActive }
 
-    const { error } = await supabase.from('reminders').update(dbUpdates).eq('id', id)
-    if (!error) {
-      setReminders(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r))
+      const { error } = await supabase.from('reminders').update(dbUpdates).eq('id', id)
+      if (error) {
+        toast.error(`Database Error: ${error.message}`);
+      } else {
+        setReminders(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+        toast.success("Reminder updated successfully!");
+      }
+    } catch (err) {
+      toast.error(`Database Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }, [])
 
