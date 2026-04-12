@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bell, Plus, Calendar, Clock, Repeat, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react'
+import { Bell, Plus, Calendar, Clock, Repeat, ToggleLeft, ToggleRight, Trash2, Pencil } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Badge } from '../ui/badge'
@@ -20,7 +20,7 @@ const REPEAT_COLORS: Record<Reminder['repeat'], string> = {
   monthly: 'rgba(134,239,172,0.15)',
 }
 
-function ReminderCard({ reminder, onToggle, onDelete }: { reminder: Reminder; onToggle: () => void; onDelete: () => void }) {
+function ReminderCard({ reminder, onToggle, onDelete, onEdit }: { reminder: Reminder; onToggle: () => void; onDelete: () => void; onEdit: () => void }) {
   const scheduledDate = new Date(reminder.scheduledDate)
   const formattedDate = scheduledDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
@@ -57,6 +57,13 @@ function ReminderCard({ reminder, onToggle, onDelete }: { reminder: Reminder; on
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0 mt-0.5">
+          <button
+            onClick={onEdit}
+            className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-500/20 rounded-lg"
+            title="Edit reminder"
+          >
+            <Pencil className="w-3.5 h-3.5 text-blue-400" />
+          </button>
           <button
             onClick={onDelete}
             className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 rounded-lg"
@@ -101,23 +108,35 @@ function ReminderCard({ reminder, onToggle, onDelete }: { reminder: Reminder; on
   )
 }
 
-function AddReminderModal({ onClose, onAdd }: { onClose: () => void; onAdd: (r: Reminder) => void }) {
-  const [title, setTitle] = useState('')
-  const [message, setMessage] = useState('')
-  const [date, setDate] = useState('')
-  const [time, setTime] = useState('09:00')
-  const [repeat, setRepeat] = useState<Reminder['repeat']>('none')
+function ReminderModal({ onClose, onAdd, onUpdate, editingReminder }: { onClose: () => void; onAdd: (r: Reminder) => void; onUpdate?: (id: string, updates: Partial<Reminder>) => void; editingReminder?: Reminder | null }) {
+  const [title, setTitle] = useState(editingReminder?.title || '')
+  const [message, setMessage] = useState(editingReminder?.message || '')
+  const [date, setDate] = useState(editingReminder?.scheduledDate || '')
+  const [time, setTime] = useState(editingReminder?.scheduledTime?.substring(0, 5) || '09:00')
+  const [repeat, setRepeat] = useState<Reminder['repeat']>(editingReminder?.repeat || 'none')
 
-  const handleAdd = () => {
+  const isEditing = !!editingReminder
+
+  const handleSubmit = () => {
     if (!title.trim() || !date) return
-    onAdd({
-      title,
-      message: message || `Reminder: ${title}`,
-      scheduledDate: date,
-      scheduledTime: time,
-      repeat,
-      isActive: true,
-    } as any)
+    if (isEditing && onUpdate) {
+      onUpdate(editingReminder.id, {
+        title,
+        message: message || `Reminder: ${title}`,
+        scheduledDate: date,
+        scheduledTime: time,
+        repeat,
+      })
+    } else {
+      onAdd({
+        title,
+        message: message || `Reminder: ${title}`,
+        scheduledDate: date,
+        scheduledTime: time,
+        repeat,
+        isActive: true,
+      } as any)
+    }
     onClose()
   }
 
@@ -138,8 +157,8 @@ function AddReminderModal({ onClose, onAdd }: { onClose: () => void; onAdd: (r: 
             <Bell className="w-5 h-5 text-neon-blue" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-foreground">Schedule Reminder</h3>
-            <p className="text-xs text-muted-foreground">Send a message to your future self</p>
+            <h3 className="font-bold text-lg text-foreground">{isEditing ? 'Edit Reminder' : 'Schedule Reminder'}</h3>
+            <p className="text-xs text-muted-foreground">{isEditing ? 'Update your reminder details' : 'Send a message to your future self'}</p>
           </div>
         </div>
 
@@ -223,11 +242,11 @@ function AddReminderModal({ onClose, onAdd }: { onClose: () => void; onAdd: (r: 
             Cancel
           </Button>
           <Button
-            onClick={handleAdd}
+            onClick={handleSubmit}
             disabled={!title.trim() || !date}
             className="flex-1 h-10 btn-neon-blue border-none font-bold disabled:opacity-50"
           >
-            Schedule
+            {isEditing ? 'Update' : 'Schedule'}
           </Button>
         </div>
       </div>
@@ -236,10 +255,16 @@ function AddReminderModal({ onClose, onAdd }: { onClose: () => void; onAdd: (r: 
 }
 
 export function RemindersView() {
-  const { reminders, addReminder, toggleReminder, deleteReminder } = useApp()
+  const { reminders, addReminder, toggleReminder, deleteReminder, updateReminder } = useApp()
   const [showModal, setShowModal] = useState(false)
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null)
 
   const activeCount = reminders.filter(r => r.isActive).length
+
+  const handleCloseModal = () => {
+    setShowModal(false)
+    setEditingReminder(null)
+  }
 
   return (
     <div className="p-6">
@@ -287,15 +312,18 @@ export function RemindersView() {
               reminder={reminder}
               onToggle={() => toggleReminder(reminder.id)}
               onDelete={() => deleteReminder(reminder.id)}
+              onEdit={() => setEditingReminder(reminder)}
             />
           ))}
         </div>
       )}
 
-      {showModal && (
-        <AddReminderModal
-          onClose={() => setShowModal(false)}
+      {(showModal || editingReminder) && (
+        <ReminderModal
+          onClose={handleCloseModal}
           onAdd={addReminder}
+          onUpdate={updateReminder}
+          editingReminder={editingReminder}
         />
       )}
     </div>

@@ -226,7 +226,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           etcDays: g.etc_days,
           color: g.color,
           subGoals: g.sub_goals || [],
-          createdAt: g.created_at
+          createdAt: g.created_at,
+          targetDate: g.target_date,
+          priority: g.priority,
+          difficulty: g.difficulty,
+          obstacles: g.obstacles,
+          motivation: g.motivation,
         })))
       } else {
         setGoals([])
@@ -287,7 +292,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         etcDays: goal.etcDays,
         color: goal.color,
         subGoals: goal.subGoals,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        targetDate: goal.targetDate,
+        priority: goal.priority,
+        difficulty: goal.difficulty,
+        obstacles: goal.obstacles,
+        motivation: goal.motivation,
       }, ...prev]);
       return;
     }
@@ -301,7 +311,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         progress: goal.progress,
         etc_days: goal.etcDays,
         color: goal.color,
-        sub_goals: goal.subGoals
+        sub_goals: goal.subGoals,
+        target_date: goal.targetDate || null,
+        priority: goal.priority || null,
+        difficulty: goal.difficulty || null,
+        obstacles: goal.obstacles || null,
+        motivation: goal.motivation || null,
       }).select().single();
 
       if (error) {
@@ -320,7 +335,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           etcDays: data.etc_days,
           color: data.color,
           subGoals: data.sub_goals,
-          createdAt: data.created_at
+          createdAt: data.created_at,
+          targetDate: data.target_date,
+          priority: data.priority,
+          difficulty: data.difficulty,
+          obstacles: data.obstacles,
+          motivation: data.motivation,
         }, ...prev]);
         toast.success("Goal added successfully!");
       }
@@ -361,6 +381,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const dbUpdates: any = { ...updates }
       if (updates.etcDays !== undefined) { dbUpdates.etc_days = updates.etcDays; delete dbUpdates.etcDays }
       if (updates.subGoals !== undefined) { dbUpdates.sub_goals = updates.subGoals; delete dbUpdates.subGoals }
+      if (updates.targetDate !== undefined) { dbUpdates.target_date = updates.targetDate; delete dbUpdates.targetDate }
+      if (updates.createdAt !== undefined) { delete dbUpdates.createdAt }
 
       const { error } = await supabase.from('goals').update(dbUpdates).eq('id', id);
       if (error) {

@@ -28,6 +28,11 @@ export interface Goal {
   subGoals: SubGoal[]
   createdAt: string
   color: 'pink' | 'blue' | 'green'
+  targetDate?: string
+  priority?: number
+  difficulty?: number
+  obstacles?: string
+  motivation?: string
 }
 
 export interface Reminder {

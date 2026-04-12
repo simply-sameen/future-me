@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Target, CircleCheck as CheckCircle2, Circle, ChevronDown, ChevronUp, Zap, Lock, Sparkles, Flame, Trash2 } from 'lucide-react'
+import { Plus, Target, CircleCheck as CheckCircle2, Circle, ChevronDown, ChevronUp, Zap, Lock, Sparkles, Flame, Trash2, Pencil } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Badge } from '../ui/badge'
@@ -34,7 +34,7 @@ const COLOR_CONFIG = {
   },
 }
 
-function GoalCard({ goal, onCoachClick }: { goal: Goal; onCoachClick: (goal: Goal) => void }) {
+function GoalCard({ goal, onCoachClick, onEditClick }: { goal: Goal; onCoachClick: (goal: Goal) => void; onEditClick: (goal: Goal) => void }) {
   const { completeSubGoal, deleteGoal } = useApp()
   const [expanded, setExpanded] = useState(false)
   const colors = COLOR_CONFIG[goal.color]
@@ -76,6 +76,16 @@ function GoalCard({ goal, onCoachClick }: { goal: Goal; onCoachClick: (goal: Goa
           >
             {goal.category}
           </Badge>
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              onEditClick(goal)
+            }}
+            className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-500/20 rounded-lg"
+            title="Edit goal"
+          >
+            <Pencil className="w-3.5 h-3.5 text-blue-400" />
+          </button>
           <button
             onClick={e => {
               e.stopPropagation()
@@ -176,11 +186,18 @@ function GoalCard({ goal, onCoachClick }: { goal: Goal; onCoachClick: (goal: Goa
   )
 }
 
-function AddGoalModal({ onClose, onAdd }: { onClose: () => void; onAdd: (goal: Goal) => void }) {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
+function GoalModal({ onClose, onAdd, onUpdate, editingGoal }: { onClose: () => void; onAdd: (goal: Goal) => void; onUpdate?: (id: string, updates: Partial<Goal>) => void; editingGoal?: Goal | null }) {
+  const [title, setTitle] = useState(editingGoal?.title || '')
+  const [description, setDescription] = useState(editingGoal?.description || '')
+  const [targetDate, setTargetDate] = useState(editingGoal?.targetDate || '')
+  const [priority, setPriority] = useState(editingGoal?.priority || 2)
+  const [difficulty, setDifficulty] = useState(editingGoal?.difficulty || 3)
+  const [obstacles, setObstacles] = useState(editingGoal?.obstacles || '')
+  const [motivation, setMotivation] = useState(editingGoal?.motivation || '')
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generated, setGenerated] = useState(false)
+  const [generated, setGenerated] = useState(!!editingGoal)
+
+  const isEditing = !!editingGoal
 
   const handleGenerate = async () => {
     if (!title.trim()) return
@@ -190,24 +207,41 @@ function AddGoalModal({ onClose, onAdd }: { onClose: () => void; onAdd: (goal: G
     setGenerated(true)
   }
 
-  const handleAdd = () => {
+  const handleSubmit = () => {
     if (!title.trim()) return
-    const newGoal: Omit<Goal, 'id' | 'createdAt'> = {
-      title,
-      description: description || `Achieve: ${title}`,
-      category: 'Personal',
-      progress: 0,
-      etcDays: 90,
-      color: 'pink',
-      subGoals: [
-        { id: `sg-${Date.now()}-1`, title: `Research and plan your approach to: ${title}`, completed: false, estimatedDays: 7 },
-        { id: `sg-${Date.now()}-2`, title: 'Define measurable milestones and success criteria', completed: false, estimatedDays: 5 },
-        { id: `sg-${Date.now()}-3`, title: 'Build the core habit or skill required', completed: false, estimatedDays: 21 },
-        { id: `sg-${Date.now()}-4`, title: 'Execute the first major phase of your plan', completed: false, estimatedDays: 30 },
-        { id: `sg-${Date.now()}-5`, title: 'Review, iterate, and push toward completion', completed: false, estimatedDays: 30 },
-      ],
+    if (isEditing && onUpdate) {
+      onUpdate(editingGoal.id, {
+        title,
+        description: description || `Achieve: ${title}`,
+        targetDate: targetDate || undefined,
+        priority,
+        difficulty,
+        obstacles: obstacles || undefined,
+        motivation: motivation || undefined,
+      })
+    } else {
+      const newGoal: Omit<Goal, 'id' | 'createdAt'> = {
+        title,
+        description: description || `Achieve: ${title}`,
+        category: 'Personal',
+        progress: 0,
+        etcDays: 90,
+        color: 'pink',
+        targetDate: targetDate || undefined,
+        priority,
+        difficulty,
+        obstacles: obstacles || undefined,
+        motivation: motivation || undefined,
+        subGoals: [
+          { id: `sg-${Date.now()}-1`, title: `Research and plan your approach to: ${title}`, completed: false, estimatedDays: 7 },
+          { id: `sg-${Date.now()}-2`, title: 'Define measurable milestones and success criteria', completed: false, estimatedDays: 5 },
+          { id: `sg-${Date.now()}-3`, title: 'Build the core habit or skill required', completed: false, estimatedDays: 21 },
+          { id: `sg-${Date.now()}-4`, title: 'Execute the first major phase of your plan', completed: false, estimatedDays: 30 },
+          { id: `sg-${Date.now()}-5`, title: 'Review, iterate, and push toward completion', completed: false, estimatedDays: 30 },
+        ],
+      }
+      onAdd(newGoal as any)
     }
-    onAdd(newGoal as any)
     onClose()
   }
 
@@ -217,8 +251,8 @@ function AddGoalModal({ onClose, onAdd }: { onClose: () => void; onAdd: (goal: G
       style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
     >
       <div
-        className="relative max-w-lg w-full rounded-2xl p-6 overflow-hidden"
-        style={{ background: '#0A0A0A', border: '1px solid rgba(255,105,180,0.3)' }}
+        className="relative max-w-lg w-full rounded-2xl p-6 overflow-y-auto"
+        style={{ background: '#0A0A0A', border: '1px solid rgba(255,105,180,0.3)', maxHeight: '90vh' }}
       >
         <div className="flex items-center gap-3 mb-5">
           <div
@@ -228,8 +262,8 @@ function AddGoalModal({ onClose, onAdd }: { onClose: () => void; onAdd: (goal: G
             <Sparkles className="w-5 h-5 text-neon-pink" />
           </div>
           <div>
-            <h3 className="font-bold text-foreground text-lg">Goal Deconstructor</h3>
-            <p className="text-xs text-muted-foreground">AI splits your goal into 5 actionable steps</p>
+            <h3 className="font-bold text-foreground text-lg">{isEditing ? 'Edit Goal' : 'Goal Deconstructor'}</h3>
+            <p className="text-xs text-muted-foreground">{isEditing ? 'Update your goal details' : 'AI splits your goal into 5 actionable steps'}</p>
           </div>
         </div>
 
@@ -247,18 +281,86 @@ function AddGoalModal({ onClose, onAdd }: { onClose: () => void; onAdd: (goal: G
           </div>
           <div>
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-              Why does this matter to you? (optional)
+              Description
             </label>
-            <Input
-              placeholder="e.g. Financial freedom for my family"
+            <textarea
+              placeholder="Describe your goal in detail..."
               value={description}
               onChange={e => setDescription(e.target.value)}
-              className="border-border bg-input text-foreground placeholder:text-muted-foreground"
+              rows={3}
+              className="w-full rounded-md border border-border bg-input text-foreground placeholder:text-muted-foreground text-sm px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                Target Date
+              </label>
+              <Input
+                type="date"
+                value={targetDate}
+                onChange={e => setTargetDate(e.target.value)}
+                className="border-border bg-input"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                Priority
+              </label>
+              <select
+                value={priority}
+                onChange={e => setPriority(Number(e.target.value))}
+                className="w-full h-9 rounded-md border border-border bg-input text-foreground text-sm px-3 focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value={1}>Low</option>
+                <option value={2}>Medium</option>
+                <option value={3}>High</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+              Difficulty (1-5)
+            </label>
+            <select
+              value={difficulty}
+              onChange={e => setDifficulty(Number(e.target.value))}
+              className="w-full h-9 rounded-md border border-border bg-input text-foreground text-sm px-3 focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value={1}>1 — Easy</option>
+              <option value={2}>2 — Moderate</option>
+              <option value={3}>3 — Challenging</option>
+              <option value={4}>4 — Hard</option>
+              <option value={5}>5 — Extreme</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+              Potential Obstacles
+            </label>
+            <textarea
+              placeholder="What challenges might you face?"
+              value={obstacles}
+              onChange={e => setObstacles(e.target.value)}
+              rows={2}
+              className="w-full rounded-md border border-border bg-input text-foreground placeholder:text-muted-foreground text-sm px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+              Motivation / Why
+            </label>
+            <textarea
+              placeholder="Why does this goal matter to you?"
+              value={motivation}
+              onChange={e => setMotivation(e.target.value)}
+              rows={2}
+              className="w-full rounded-md border border-border bg-input text-foreground placeholder:text-muted-foreground text-sm px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
         </div>
 
-        {!generated ? (
+        {!isEditing && !generated ? (
           <Button
             onClick={handleGenerate}
             disabled={!title.trim() || isGenerating}
@@ -276,7 +378,7 @@ function AddGoalModal({ onClose, onAdd }: { onClose: () => void; onAdd: (goal: G
               </div>
             )}
           </Button>
-        ) : (
+        ) : !isEditing ? (
           <div
             className="rounded-xl p-4 mb-4"
             style={{ background: 'rgba(255,105,180,0.06)', border: '1px solid rgba(255,105,180,0.2)' }}
@@ -292,7 +394,7 @@ function AddGoalModal({ onClose, onAdd }: { onClose: () => void; onAdd: (goal: G
               />
             </div>
           </div>
-        )}
+        ) : null}
 
         <div className="flex gap-2">
           <Button
@@ -303,11 +405,11 @@ function AddGoalModal({ onClose, onAdd }: { onClose: () => void; onAdd: (goal: G
             Cancel
           </Button>
           <Button
-            onClick={handleAdd}
+            onClick={handleSubmit}
             disabled={!title.trim()}
             className="flex-1 h-10 btn-neon-pink border-none font-bold disabled:opacity-50"
           >
-            Add Goal
+            {isEditing ? 'Save Changes' : 'Add Goal'}
           </Button>
         </div>
       </div>
@@ -316,12 +418,22 @@ function AddGoalModal({ onClose, onAdd }: { onClose: () => void; onAdd: (goal: G
 }
 
 export function GoalsView() {
-  const { goals, isPremium, addGoal } = useApp()
+  const { goals, isPremium, addGoal, updateGoal } = useApp()
   const [showAddModal, setShowAddModal] = useState(false)
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [selectedGoalForCoach, setSelectedGoalForCoach] = useState<Goal | null>(null)
 
   const FREE_LIMIT = 10
   const canAddGoal = isPremium || goals.length < FREE_LIMIT
+
+  const handleEditGoal = (goal: Goal) => {
+    setEditingGoal(goal)
+  }
+
+  const handleCloseModal = () => {
+    setShowAddModal(false)
+    setEditingGoal(null)
+  }
 
   return (
     <div className="p-6">
@@ -401,15 +513,18 @@ export function GoalsView() {
               key={goal.id}
               goal={goal}
               onCoachClick={setSelectedGoalForCoach}
+              onEditClick={handleEditGoal}
             />
           ))}
         </div>
       )}
 
-      {showAddModal && (
-        <AddGoalModal
-          onClose={() => setShowAddModal(false)}
+      {(showAddModal || editingGoal) && (
+        <GoalModal
+          onClose={handleCloseModal}
           onAdd={addGoal}
+          onUpdate={updateGoal}
+          editingGoal={editingGoal}
         />
       )}
 
