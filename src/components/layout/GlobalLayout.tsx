@@ -42,12 +42,13 @@ function LiveClock() {
 
 
 export function GlobalLayout({ children }: GlobalLayoutProps) {
-  const { tickers, notifications, setNotifications } = useApp()
+  const { tickers, notifications, setNotifications, user } = useApp()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const notificationsRef = useRef<HTMLDivElement>(null)
   
-  const hasTicker = tickers.length > 0
+  const showSocialCues = user?.showSocialCues !== false
+  const hasTicker = tickers.length > 0 && showSocialCues
   const hasUnreadNotifications = notifications.some(n => !n.read)
 
   useEffect(() => {

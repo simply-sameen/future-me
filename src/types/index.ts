@@ -9,6 +9,7 @@ export interface User {
   email: string
   avatar?: string
   isDemoUser?: boolean
+  showSocialCues?: boolean
 }
 
 export interface SubGoal {

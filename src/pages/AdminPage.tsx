@@ -7,6 +7,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../components
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { useApp } from '../contexts/AppContext'
 import { supabase } from '../lib/supabaseClient'
+import { THEME_PRESETS } from '../lib/themes'
 import { toast } from 'sonner'
 import type { TickerCategory, NewsTicker } from '../types'
 import type { ChartConfig } from '../components/ui/chart'
@@ -64,7 +65,7 @@ function MetricCard({
 }
 
 export function AdminPage() {
-  const { navigateTo, isDemoMode, goals, reminders, tickers, addTicker, removeTicker } = useApp()
+  const { navigateTo, isDemoMode, goals, reminders, tickers, addTicker, removeTicker, themePreset, glowEnabled, setAppTheme, setAppGlow } = useApp()
   const [tickerMessage, setTickerMessage] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<TickerCategory>('community')
   const [published, setPublished] = useState(false)
@@ -477,6 +478,109 @@ export function AdminPage() {
               })}
             </div>
           )}
+        </div>
+
+        {/* Theme Customizer */}
+        <div
+          className="rounded-xl p-6 mb-8"
+          style={{ background: '#0A0A0A', border: '1px solid rgba(168,85,247,0.2)' }}
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, var(--neon-primary), var(--neon-secondary))', opacity: 0.9 }}
+            >
+              <Sparkles className="w-5 h-5 text-black" />
+            </div>
+            <div>
+              <h3 className="font-bold text-foreground">Theme Customizer</h3>
+              <p className="text-xs text-muted-foreground">Choose a preset theme for the entire platform</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
+            {THEME_PRESETS.map(preset => {
+              const isActive = themePreset === preset.id
+              return (
+                <button
+                  key={preset.id}
+                  onClick={async () => {
+                    setAppTheme(preset.id)
+                    if (!isDemoMode) {
+                      try {
+                        await supabase.from('app_settings').update({ theme_preset: preset.id }).eq('id', 1)
+                        toast.success(`Theme: ${preset.name}`)
+                      } catch { toast.error('Failed to save theme') }
+                    } else {
+                      toast.success(`Theme: ${preset.name} (demo)`)
+                    }
+                  }}
+                  className="relative rounded-xl p-3 text-center transition-all duration-300 group"
+                  style={{
+                    background: preset.surface,
+                    border: isActive ? `2px solid ${preset.primary}` : '2px solid #262626',
+                    boxShadow: isActive ? `0 0 20px ${preset.primary}30` : 'none',
+                  }}
+                >
+                  <div className="flex justify-center gap-1.5 mb-2">
+                    <div className="w-6 h-6 rounded-full" style={{ background: preset.primary }} />
+                    <div className="w-6 h-6 rounded-full" style={{ background: preset.secondary }} />
+                  </div>
+                  <p className="text-xs font-medium" style={{ color: isActive ? preset.primary : '#888' }}>
+                    {preset.name}
+                  </p>
+                  {isActive && (
+                    <div
+                      className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
+                      style={{ background: preset.primary, color: preset.surface }}
+                    >
+                      ✓
+                    </div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Glow Toggle */}
+          <div
+            className="rounded-lg p-4 flex items-center justify-between"
+            style={{ background: '#141414', border: '1px solid #262626' }}
+          >
+            <div className="flex items-center gap-3">
+              <Zap className="w-4 h-4" style={{ color: glowEnabled ? 'var(--neon-primary)' : '#555' }} />
+              <div>
+                <p className="text-sm font-medium text-foreground">Neon Glows</p>
+                <p className="text-xs text-muted-foreground">Toggle box-shadow effects globally</p>
+              </div>
+            </div>
+            <button
+              onClick={async () => {
+                const newVal = !glowEnabled
+                setAppGlow(newVal)
+                if (!isDemoMode) {
+                  try {
+                    await supabase.from('app_settings').update({ glow_enabled: newVal }).eq('id', 1)
+                    toast.success(newVal ? 'Glows enabled' : 'Glows disabled')
+                  } catch { toast.error('Failed to save glow setting') }
+                } else {
+                  toast.success(newVal ? 'Glows enabled (demo)' : 'Glows disabled (demo)')
+                }
+              }}
+              className="relative w-11 h-6 rounded-full transition-colors duration-200"
+              style={{
+                background: glowEnabled ? 'color-mix(in srgb, var(--neon-primary) 40%, transparent)' : '#262626',
+              }}
+            >
+              <div
+                className="absolute top-0.5 w-5 h-5 rounded-full transition-transform duration-200"
+                style={{
+                  background: glowEnabled ? 'var(--neon-primary)' : '#555',
+                  transform: glowEnabled ? 'translateX(22px)' : 'translateX(2px)',
+                }}
+              />
+            </button>
+          </div>
         </div>
 
         {/* System Debug Section */}

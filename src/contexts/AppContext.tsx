@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import type { Page, DashboardTab, User, Goal, Reminder, NewsTicker, AppNotification } from '../types'
 import { DEMO_USER, DEMO_GOALS, DEMO_REMINDERS, DEMO_TICKERS } from '../data/mockData'
 import { supabase } from '../lib/supabaseClient'
+import { applyTheme, setGlow } from '../lib/themes'
 import { toast } from 'sonner'
 
 export interface ChatMessage {
@@ -56,6 +57,13 @@ interface AppContextValue {
   setNotifications: React.Dispatch<React.SetStateAction<AppNotification[]>>
 
   incrementAiCalls: () => Promise<void>
+  updateUserProfile: (updates: { name?: string; email?: string; password?: string }) => Promise<void>
+  toggleSocialCues: () => Promise<void>
+
+  themePreset: string
+  glowEnabled: boolean
+  setAppTheme: (presetId: string) => void
+  setAppGlow: (enabled: boolean) => void
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined)
@@ -72,6 +80,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [tickers, setTickers] = useState<NewsTicker[]>(DEMO_TICKERS.filter(t => t.isActive))
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const [themePreset, setThemePreset] = useState('neon-pink-blue')
+  const [glowEnabled, setGlowEnabled] = useState(true)
+
+  // Apply theme whenever it changes
+  useEffect(() => {
+    applyTheme(themePreset)
+  }, [themePreset])
+
+  useEffect(() => {
+    setGlow(glowEnabled)
+  }, [glowEnabled])
+
+  const setAppTheme = useCallback((presetId: string) => {
+    setThemePreset(presetId)
+  }, [])
+
+  const setAppGlow = useCallback((enabled: boolean) => {
+    setGlowEnabled(enabled)
+  }, [])
 
   const navigateTo = useCallback((page: Page) => {
     setCurrentPage(page)
@@ -147,7 +174,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         name: data.user.user_metadata?.name || name || email.split('@')[0],
         email: data.user.email || email,
         avatar: avatar,
-        isDemoUser: false
+        isDemoUser: false,
+        showSocialCues: true,
       })
       setIsDemoMode(false)
       setIsPremium(false)
@@ -203,12 +231,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         userAvatar = profile.avatar || userAvatar
       }
 
+      const showSocialCues = profile?.show_social_cues !== false // default true
+
       setUser({
         id: authData.user.id,
         name: userName,
         email: authData.user.email || email,
         avatar: userAvatar,
-        isDemoUser: false
+        isDemoUser: false,
+        showSocialCues,
       })
 
       // Fetch existing goals
@@ -539,6 +570,52 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  const updateUserProfile = useCallback(async (updates: { name?: string; email?: string; password?: string }) => {
+    try {
+      // Update Supabase Auth (email/password)
+      if (updates.email || updates.password) {
+        const authUpdates: any = {}
+        if (updates.email) authUpdates.email = updates.email
+        if (updates.password) authUpdates.password = updates.password
+        const { error } = await supabase.auth.updateUser(authUpdates)
+        if (error) throw error
+      }
+
+      // Update our users table (name)
+      if (updates.name && user) {
+        const { error } = await supabase.from('users').update({ name: updates.name }).eq('id', user.id)
+        if (error) throw error
+      }
+
+      // Update local state
+      setUser(prev => prev ? {
+        ...prev,
+        ...(updates.name && { name: updates.name }),
+        ...(updates.email && { email: updates.email }),
+      } : null)
+
+      toast.success('Profile updated successfully!')
+    } catch (err: any) {
+      toast.error(`Profile update failed: ${err.message}`)
+      throw err
+    }
+  }, [user])
+
+  const toggleSocialCues = useCallback(async () => {
+    if (!user) return
+    const newValue = !(user.showSocialCues !== false)
+    try {
+      if (!isDemoMode) {
+        const { error } = await supabase.from('users').update({ show_social_cues: newValue }).eq('id', user.id)
+        if (error) throw error
+      }
+      setUser(prev => prev ? { ...prev, showSocialCues: newValue } : null)
+      toast.success(newValue ? 'Social cues enabled' : 'Social cues disabled')
+    } catch (err: any) {
+      toast.error(`Failed to update preference: ${err.message}`)
+    }
+  }, [user, isDemoMode])
+
   useEffect(() => {
     if (!user) return;
 
@@ -636,6 +713,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       notifications,
       setNotifications,
       incrementAiCalls,
+      updateUserProfile,
+      toggleSocialCues,
+      themePreset,
+      glowEnabled,
+      setAppTheme,
+      setAppGlow,
     }}>
       {children}
     </AppContext.Provider>
