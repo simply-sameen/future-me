@@ -1,4 +1,4 @@
-import type { Goal, Reminder, NewsTicker, AdminMetrics } from '../types'
+import type { Goal, Reminder, NewsTicker } from '../types'
 
 export const DEMO_USER = {
   id: 'demo-user',
