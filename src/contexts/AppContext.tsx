@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
-import type { Page, DashboardTab, User, Goal, Reminder, NewsTicker } from '../types'
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import type { Page, DashboardTab, User, Goal, Reminder, NewsTicker, AppNotification } from '../types'
 import { DEMO_USER, DEMO_GOALS, DEMO_REMINDERS, DEMO_TICKERS } from '../data/mockData'
 import { supabase } from '../lib/supabaseClient'
 import { toast } from 'sonner'
@@ -51,6 +51,9 @@ interface AppContextValue {
   chatMessages: ChatMessage[]
   setChatMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>
   clearChatMessages: () => void
+
+  notifications: AppNotification[]
+  setNotifications: React.Dispatch<React.SetStateAction<AppNotification[]>>
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined)
@@ -66,6 +69,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [tickers, setTickers] = useState<NewsTicker[]>(DEMO_TICKERS.filter(t => t.isActive))
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
 
   const navigateTo = useCallback((page: Page) => {
     setCurrentPage(page)
@@ -77,6 +81,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setGoals(DEMO_GOALS)
     setReminders(DEMO_REMINDERS)
     setChatMessages([]) // Clear chat history on session start
+    setNotifications([]) // Clear notification history
+
     if (typeof window !== 'undefined') {
       localStorage.removeItem('chatMessages')
       sessionStorage.removeItem('chatMessages')
@@ -93,6 +99,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setGoals([])
     setReminders([])
     setChatMessages([]) // Explicitly clear chat history on logout
+    setNotifications([])
+
     if (typeof window !== 'undefined') {
       localStorage.removeItem('chatMessages')
       sessionStorage.removeItem('chatMessages')
@@ -144,6 +152,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setGoals([])
       setReminders([])
       setChatMessages([]) // Clear chat history for fresh registration session
+      setNotifications([])
+
       if (typeof window !== 'undefined') {
         localStorage.removeItem('chatMessages')
         sessionStorage.removeItem('chatMessages')
@@ -245,6 +255,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setIsDemoMode(false)
       setIsPremium(false)
       setChatMessages([]) // Clear chat history for fresh login session
+      setNotifications([])
+
       if (typeof window !== 'undefined') {
         localStorage.removeItem('chatMessages')
         sessionStorage.removeItem('chatMessages')
@@ -494,6 +506,63 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setChatMessages([])
   }, [])
 
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      // Calculate local YYYY-MM-DD
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      const localDate = `${y}-${m}-${d}`;
+
+      const currentHour = now.getHours().toString().padStart(2, '0');
+      const currentMinute = now.getMinutes().toString().padStart(2, '0');
+      const currentTime = `${currentHour}:${currentMinute}`;
+
+      setNotifications(prev => {
+        let triggeredAny = false;
+        const newNotifs: AppNotification[] = [];
+
+        reminders.forEach(reminder => {
+          if (!reminder.isActive) return;
+
+          const isMatch = (reminder.scheduledDate === localDate && reminder.scheduledTime === currentTime);
+          // prevent duplicate triggers within the same minute for the same reminder
+          const alreadyTriggered = prev.some(n => 
+            n.id.startsWith(reminder.id) && n.time.includes(localDate) && n.time.includes(currentTime)
+          );
+
+          if (isMatch && !alreadyTriggered) {
+            triggeredAny = true;
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('Reminder', { body: reminder.title });
+            }
+
+            newNotifs.push({
+              id: `${reminder.id}-${Date.now()}`,
+              title: 'Reminder',
+              message: reminder.title,
+              time: now.toISOString(),
+              read: false
+            });
+
+            toast.info(`Reminder: ${reminder.title}`);
+          }
+        });
+
+        if (triggeredAny) {
+          return [...newNotifs, ...prev];
+        }
+        return prev;
+      });
+
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [user, reminders]);
+
   const isAuthenticated = !!user
 
   return (
@@ -530,6 +599,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       chatMessages,
       setChatMessages,
       clearChatMessages,
+      notifications,
+      setNotifications,
     }}>
       {children}
     </AppContext.Provider>

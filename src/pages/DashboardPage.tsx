@@ -6,9 +6,16 @@ import { CalendarView } from '../components/dashboard/CalendarView'
 import { AnalyticsView } from '../components/dashboard/AnalyticsView'
 import { AIAssistantView } from '../components/dashboard/AIAssistantView'
 import { useApp } from '../contexts/AppContext'
+import { useEffect } from 'react'
 
 export function DashboardPage() {
   const { dashboardTab } = useApp()
+
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
 
   const renderView = () => {
     switch (dashboardTab) {
