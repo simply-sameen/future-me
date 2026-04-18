@@ -68,7 +68,7 @@ export function CalendarView() {
       <div className="grid lg:grid-cols-[1fr_300px] gap-6">
         <div
           className="rounded-xl p-5"
-          style={{ background: '#0A0A0A', border: '1px solid #262626' }}
+          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
         >
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-lg font-bold text-foreground">
@@ -78,14 +78,14 @@ export function CalendarView() {
               <button
                 onClick={prevMonth}
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                style={{ background: '#141414', border: '1px solid #262626' }}
+                style={{ background: 'var(--muted)', border: '1px solid var(--border)' }}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={nextMonth}
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                style={{ background: '#141414', border: '1px solid #262626' }}
+                style={{ background: 'var(--muted)', border: '1px solid var(--border)' }}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -118,16 +118,16 @@ export function CalendarView() {
                   className="relative aspect-square flex flex-col items-center justify-start rounded-lg p-1 text-sm transition-all duration-150"
                   style={{
                     background: isSelected
-                      ? 'rgba(255,105,180,0.2)'
+                      ? 'color-mix(in srgb, var(--user-accent) 20%, transparent)'
                       : todayFlag
-                        ? 'rgba(255,105,180,0.08)'
+                        ? 'color-mix(in srgb, var(--user-accent) 8%, transparent)'
                         : 'transparent',
                     border: isSelected
-                      ? '1px solid rgba(255,105,180,0.5)'
+                      ? '1px solid color-mix(in srgb, var(--user-accent) 50%, transparent)'
                       : todayFlag
-                        ? '1px solid rgba(255,105,180,0.3)'
+                        ? '1px solid color-mix(in srgb, var(--user-accent) 30%, transparent)'
                         : '1px solid transparent',
-                    color: todayFlag ? '#FF69B4' : '#D0D0D0',
+                    color: todayFlag ? 'var(--user-accent)' : 'var(--foreground)',
                     fontWeight: todayFlag ? 700 : 400,
                   }}
                 >
@@ -138,7 +138,7 @@ export function CalendarView() {
                         <div
                           key={e.id}
                           className="w-1 h-1 rounded-full"
-                          style={{ background: e.isActive ? '#FF69B4' : '#555' }}
+                          style={{ background: e.isActive ? 'var(--user-accent)' : 'var(--muted-foreground)' }}
                         />
                       ))}
                     </div>
@@ -152,10 +152,10 @@ export function CalendarView() {
         <div className="space-y-4">
           <div
             className="rounded-xl p-4"
-            style={{ background: '#0A0A0A', border: '1px solid #262626' }}
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
           >
             <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-              <Bell className="w-4 h-4 text-neon-pink" />
+              <Bell className="w-4 h-4" style={{ color: 'var(--user-accent)' }} />
               {selectedDay
                 ? `${MONTH_NAMES[month]} ${selectedDay}`
                 : 'Select a day'}
@@ -169,8 +169,8 @@ export function CalendarView() {
                       key={r.id}
                       className="p-3 rounded-lg"
                       style={{
-                        background: r.isActive ? 'rgba(255,105,180,0.06)' : '#141414',
-                        border: `1px solid ${r.isActive ? 'rgba(255,105,180,0.2)' : '#262626'}`,
+                        background: r.isActive ? 'color-mix(in srgb, var(--user-accent) 6%, transparent)' : 'var(--muted)',
+                        border: `1px solid ${r.isActive ? 'color-mix(in srgb, var(--user-accent) 20%, transparent)' : 'var(--border)'}`,
                       }}
                     >
                       <p className="text-xs font-semibold text-foreground">{r.title}</p>
@@ -188,10 +188,10 @@ export function CalendarView() {
 
           <div
             className="rounded-xl p-4"
-            style={{ background: '#0A0A0A', border: '1px solid #262626' }}
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
           >
             <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-              <Target className="w-4 h-4 text-neon-pink" />
+              <Target className="w-4 h-4" style={{ color: 'var(--user-accent)' }} />
               Upcoming
             </h4>
             <div className="space-y-2">
@@ -205,11 +205,11 @@ export function CalendarView() {
                     <div
                       key={r.id}
                       className="flex items-center gap-2 p-2 rounded-lg"
-                      style={{ background: '#141414', border: '1px solid #262626' }}
+                      style={{ background: 'var(--muted)', border: '1px solid var(--border)' }}
                     >
                       <div
                         className="w-1.5 h-1.5 rounded-full shrink-0"
-                        style={{ background: '#FF69B4', boxShadow: '0 0 4px rgba(255,105,180,0.6)' }}
+                        style={{ background: 'var(--user-accent)' }}
                       />
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-foreground truncate">{r.title}</p>

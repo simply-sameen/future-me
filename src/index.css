@@ -40,64 +40,99 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ── Notion-style named palette tokens ── */
+  --color-midnight:          #141414;
+  --color-midnight-muted:    #202020;
+  --color-titanium:          #FFFFFF;
+  --color-titanium-muted:    #F7F7F5;
+  --color-notion-text-dark:  #D4D4D4;
+  --color-notion-text-light: #37352F;
+  --color-user-accent:       var(--user-accent);
 }
 
 /* ============================================================
-   MIDNIGHT NEON THEME — CSS Variable Driven
-   Themeable via --neon-primary, --neon-secondary, --app-bg, --app-surface
+   NOTION-STYLE THEME — Dual light/dark, per-user accent
+   Dark mode: HTML root has class="dark" (default)
+   Light mode: HTML root has class="light"
+   Accent:    --user-accent injected by AppContext on login
    ============================================================ */
 
 :root {
   --radius: 0.625rem;
 
-  /* Themeable accent colors */
-  --neon-primary: #FF69B4;
-  --neon-secondary: #89CFF0;
-  --app-bg: #141414;
-  --app-surface: #0A0A0A;
+  /* Per-user accent — set dynamically by AppContext */
+  --user-accent: #61adee; /* fallback: Blue */
 
-  --background: var(--app-bg);
-  --foreground: #F0F0F0;
+  /* ── Dark mode (default) ── */
+  --background:              #141414;
+  --foreground:              #D4D4D4;
+  --card:                    #202020;
+  --card-foreground:         #D4D4D4;
+  --popover:                 #202020;
+  --popover-foreground:      #D4D4D4;
+  --primary:                 var(--user-accent);
+  --primary-foreground:      #141414;
+  --secondary:               #2A2A2A;
+  --secondary-foreground:    #D4D4D4;
+  --muted:                   #2A2A2A;
+  --muted-foreground:        #888888;
+  --accent:                  #2A2A2A;
+  --accent-foreground:       #D4D4D4;
+  --destructive:             oklch(0.65 0.24 27);
+  --destructive-foreground:  #F0F0F0;
+  --border:                  #2E2E2E;
+  --input:                   #252525;
+  --ring:                    var(--user-accent);
+  --chart-1:                 var(--user-accent);
+  --chart-2:                 color-mix(in srgb, var(--user-accent) 60%, white);
+  --chart-3:                 oklch(0.75 0.18 142);
+  --chart-4:                 oklch(0.75 0.18 62);
+  --chart-5:                 oklch(0.7 0.15 300);
+  --sidebar:                 #202020;
+  --sidebar-foreground:      #D4D4D4;
+  --sidebar-primary:         var(--user-accent);
+  --sidebar-primary-foreground: #141414;
+  --sidebar-accent:          #2A2A2A;
+  --sidebar-accent-foreground: #D4D4D4;
+  --sidebar-border:          #2E2E2E;
+  --sidebar-ring:            var(--user-accent);
+}
 
-  --card: var(--app-surface);
-  --card-foreground: #F0F0F0;
-
-  --popover: var(--app-surface);
-  --popover-foreground: #F0F0F0;
-
-  --primary: var(--neon-primary);
-  --primary-foreground: var(--app-surface);
-
-  --secondary: #1A1A1A;
-  --secondary-foreground: #E0E0E0;
-
-  --muted: #1A1A1A;
-  --muted-foreground: #888888;
-
-  --accent: #1E1E1E;
-  --accent-foreground: #F0F0F0;
-
-  --destructive: oklch(0.65 0.24 27);
-  --destructive-foreground: #F0F0F0;
-
-  --border: #262626;
-  --input: #1E1E1E;
-  --ring: var(--neon-primary);
-
-  --chart-1: var(--neon-primary);
-  --chart-2: var(--neon-secondary);
-  --chart-3: oklch(0.75 0.18 142);
-  --chart-4: oklch(0.75 0.18 62);
-  --chart-5: oklch(0.7 0.15 300);
-
-  --sidebar: var(--app-surface);
-  --sidebar-foreground: #D0D0D0;
-  --sidebar-primary: var(--neon-primary);
-  --sidebar-primary-foreground: var(--app-surface);
-  --sidebar-accent: #1A1A1A;
-  --sidebar-accent-foreground: #F0F0F0;
-  --sidebar-border: #262626;
-  --sidebar-ring: var(--neon-primary);
+/* ── Light mode overrides — active when <html class="light"> ── */
+html.light {
+  --background:              #FFFFFF;
+  --foreground:              #37352F;
+  --card:                    #F7F7F5;
+  --card-foreground:         #37352F;
+  --popover:                 #F7F7F5;
+  --popover-foreground:      #37352F;
+  --primary:                 var(--user-accent);
+  --primary-foreground:      #FFFFFF;
+  --secondary:               #EBEBEA;
+  --secondary-foreground:    #37352F;
+  --muted:                   #EBEBEA;
+  --muted-foreground:        #9B9A97;
+  --accent:                  #F1F1EF;
+  --accent-foreground:       #37352F;
+  --destructive:             oklch(0.55 0.24 27);
+  --destructive-foreground:  #FFFFFF;
+  --border:                  #E9E9E7;
+  --input:                   #F1F1EF;
+  --ring:                    var(--user-accent);
+  --chart-1:                 var(--user-accent);
+  --chart-2:                 color-mix(in srgb, var(--user-accent) 60%, black);
+  --chart-3:                 oklch(0.55 0.18 142);
+  --chart-4:                 oklch(0.55 0.18 62);
+  --chart-5:                 oklch(0.5 0.15 300);
+  --sidebar:                 #F7F7F5;
+  --sidebar-foreground:      #37352F;
+  --sidebar-primary:         var(--user-accent);
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent:          #EBEBEA;
+  --sidebar-accent-foreground: #37352F;
+  --sidebar-border:          #E9E9E7;
+  --sidebar-ring:            var(--user-accent);
 }
 
 @layer base {
@@ -112,96 +147,68 @@
     height: 4px;
   }
   ::-webkit-scrollbar-track {
-    background: var(--app-surface);
+    background: var(--card);
   }
   ::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--neon-primary) 35%, transparent);
+    background: color-mix(in srgb, var(--user-accent) 35%, transparent);
     border-radius: 2px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in srgb, var(--neon-primary) 60%, transparent);
+    background: color-mix(in srgb, var(--user-accent) 60%, transparent);
   }
 }
 
 /* ============================================================
-   NEON GLOW UTILITIES — Variable-driven
+   ACCENT UTILITIES — flat, no glows
    ============================================================ */
-.neon-glow-pink {
-  box-shadow: 0 0 15px color-mix(in srgb, var(--neon-primary) 50%, transparent),
-              0 0 30px color-mix(in srgb, var(--neon-primary) 20%, transparent);
-}
-.neon-glow-pink-lg {
-  box-shadow: 0 0 25px color-mix(in srgb, var(--neon-primary) 60%, transparent),
-              0 0 50px color-mix(in srgb, var(--neon-primary) 30%, transparent),
-              0 0 100px color-mix(in srgb, var(--neon-primary) 10%, transparent);
-}
-.neon-glow-blue {
-  box-shadow: 0 0 15px color-mix(in srgb, var(--neon-secondary) 50%, transparent),
-              0 0 30px color-mix(in srgb, var(--neon-secondary) 20%, transparent);
-}
-.neon-glow-blue-lg {
-  box-shadow: 0 0 25px color-mix(in srgb, var(--neon-secondary) 60%, transparent),
-              0 0 50px color-mix(in srgb, var(--neon-secondary) 30%, transparent);
-}
-.text-neon-pink { color: var(--neon-primary); }
-.text-neon-blue { color: var(--neon-secondary); }
-.border-neon-pink { border-color: color-mix(in srgb, var(--neon-primary) 50%, transparent); }
-.border-neon-blue { border-color: color-mix(in srgb, var(--neon-secondary) 50%, transparent); }
+.text-accent    { color: var(--user-accent); }
+.border-accent  { border-color: color-mix(in srgb, var(--user-accent) 50%, transparent); }
 
-.card-neon {
-  background-color: var(--app-surface);
-  border: 1px solid #262626;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+.card-flat {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  transition: border-color 0.2s ease;
 }
-.card-neon:hover {
-  border-color: color-mix(in srgb, var(--neon-primary) 35%, transparent);
-  box-shadow: 0 0 20px color-mix(in srgb, var(--neon-primary) 12%, transparent);
-}
-.card-neon-blue:hover {
-  border-color: color-mix(in srgb, var(--neon-secondary) 35%, transparent);
-  box-shadow: 0 0 20px color-mix(in srgb, var(--neon-secondary) 12%, transparent);
+.card-flat:hover {
+  border-color: color-mix(in srgb, var(--user-accent) 40%, transparent);
 }
 
-.btn-neon-pink {
-  background: linear-gradient(135deg, var(--neon-primary), color-mix(in srgb, var(--neon-primary) 85%, black));
-  color: var(--app-surface);
+/* Primary action button */
+.btn-primary {
+  background: var(--user-accent);
+  color: var(--primary-foreground);
   font-weight: 700;
-  transition: all 0.25s ease;
+  transition: opacity 0.2s ease;
   border: none;
 }
-.btn-neon-pink:hover {
-  box-shadow: 0 0 25px color-mix(in srgb, var(--neon-primary) 65%, transparent),
-              0 0 50px color-mix(in srgb, var(--neon-primary) 30%, transparent);
-  transform: translateY(-1px);
-}
-.btn-neon-blue {
-  background: linear-gradient(135deg, var(--neon-secondary), color-mix(in srgb, var(--neon-secondary) 85%, black));
-  color: var(--app-surface);
-  font-weight: 700;
-  transition: all 0.25s ease;
-  border: none;
-}
-.btn-neon-blue:hover {
-  box-shadow: 0 0 25px color-mix(in srgb, var(--neon-secondary) 65%, transparent),
-              0 0 50px color-mix(in srgb, var(--neon-secondary) 30%, transparent);
-  transform: translateY(-1px);
+.btn-primary:hover {
+  opacity: 0.88;
 }
 
-.gradient-text-pink {
-  background: linear-gradient(135deg, var(--neon-primary), color-mix(in srgb, var(--neon-primary) 70%, white));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Secondary / ghost action button */
+.btn-secondary {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  font-weight: 600;
+  transition: background 0.2s ease;
+  border: 1px solid var(--border);
 }
-.gradient-text-blue {
-  background: linear-gradient(135deg, var(--neon-secondary), color-mix(in srgb, var(--neon-secondary) 70%, white));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.btn-secondary:hover {
+  background: var(--accent);
 }
 
+/* Progress bar */
+.progress-bar {
+  background: var(--user-accent);
+  border-radius: 9999px;
+  height: 100%;
+}
+
+/* ============================================================
+   STRUCTURAL ANIMATIONS — no glow, purely movement
+   ============================================================ */
 @keyframes ticker-scroll {
-  0% { transform: translateX(100%); }
+  0%   { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
 }
 .animate-ticker {
@@ -209,30 +216,9 @@
   white-space: nowrap;
 }
 
-@keyframes pulse-glow-pink {
-  0%, 100% { box-shadow: 0 0 15px color-mix(in srgb, var(--neon-primary) 40%, transparent), 0 0 30px color-mix(in srgb, var(--neon-primary) 20%, transparent); }
-  50% { box-shadow: 0 0 30px color-mix(in srgb, var(--neon-primary) 80%, transparent), 0 0 60px color-mix(in srgb, var(--neon-primary) 40%, transparent), 0 0 90px color-mix(in srgb, var(--neon-primary) 20%, transparent); }
-}
-.pulse-glow-pink {
-  animation: pulse-glow-pink 2s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-.shimmer-text {
-  background: linear-gradient(90deg, var(--neon-primary) 0%, var(--neon-secondary) 50%, var(--neon-primary) 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 3s linear infinite;
-}
-
 @keyframes float-up {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+  50%       { transform: translateY(-8px); }
 }
 .animate-float {
   animation: float-up 3s ease-in-out infinite;
@@ -240,46 +226,14 @@
 
 @keyframes progress-fill {
   from { width: 0%; }
-  to { width: var(--progress-width, 100%); }
+  to   { width: var(--progress-width, 100%); }
 }
 .animate-progress {
   animation: progress-fill 1.5s ease-out forwards;
 }
 
-.progress-neon {
-  background: linear-gradient(90deg, var(--neon-primary), var(--neon-secondary));
-  box-shadow: 0 0 8px color-mix(in srgb, var(--neon-primary) 40%, transparent);
-  border-radius: 9999px;
-  height: 100%;
-}
-
-.backdrop-neon {
+/* Subtle backdrop blur — no neon tint */
+.backdrop-surface {
   backdrop-filter: blur(20px);
-  background: color-mix(in srgb, var(--app-surface) 90%, transparent);
-}
-
-.grid-pattern {
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--neon-primary) 3%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--neon-primary) 3%, transparent) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* ============================================================
-   GLOW KILL SWITCH — Applied via .no-glow on <html>
-   ============================================================ */
-.no-glow .neon-glow-pink,
-.no-glow .neon-glow-pink-lg,
-.no-glow .neon-glow-blue,
-.no-glow .neon-glow-blue-lg,
-.no-glow .pulse-glow-pink {
-  box-shadow: none !important;
-  animation: none !important;
-}
-.no-glow .card-neon:hover {
-  box-shadow: none !important;
-}
-.no-glow .btn-neon-pink:hover,
-.no-glow .btn-neon-blue:hover {
-  box-shadow: none !important;
+  background: color-mix(in srgb, var(--card) 92%, transparent);
 }

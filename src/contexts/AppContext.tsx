@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import type { Page, DashboardTab, User, Goal, Reminder, NewsTicker, AppNotification } from '../types'
 import { DEMO_USER, DEMO_GOALS, DEMO_REMINDERS, DEMO_TICKERS } from '../data/mockData'
 import { supabase } from '../lib/supabaseClient'
-import { applyTheme, setGlow } from '../lib/themes'
 import { toast } from 'sonner'
 
 export interface ChatMessage {
@@ -59,14 +58,27 @@ interface AppContextValue {
   incrementAiCalls: () => Promise<void>
   updateUserProfile: (updates: { name?: string; email?: string; password?: string }) => Promise<void>
   toggleSocialCues: () => Promise<void>
-
-  themePreset: string
-  glowEnabled: boolean
-  setAppTheme: (presetId: string) => void
-  setAppGlow: (enabled: boolean) => void
+  updateUserTheme: (theme: string, accentColor: string) => Promise<void>
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined)
+
+/* ── Accent map: DB value → hex ── */
+const ACCENT_MAP: Record<string, string> = {
+  'lavender': '#e8daf9',
+  'yellow':   '#ffc95e',
+  'orange':   '#f57362',
+  'sky-blue': '#61adee',
+  'teal':     '#2a9d99',
+  'brown':    '#b18164',
+}
+
+function applyUserTheme(theme: string, accentColor: string) {
+  const hex = ACCENT_MAP[accentColor] ?? '#61adee'
+  document.documentElement.style.setProperty('--user-accent', hex)
+  document.documentElement.classList.remove('light', 'dark')
+  document.documentElement.classList.add(theme === 'light' ? 'light' : 'dark')
+}
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentPage, setCurrentPage] = useState<Page>('login')
@@ -80,24 +92,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [tickers, setTickers] = useState<NewsTicker[]>(DEMO_TICKERS.filter(t => t.isActive))
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [notifications, setNotifications] = useState<AppNotification[]>([])
-  const [themePreset, setThemePreset] = useState('neon-pink-blue')
-  const [glowEnabled, setGlowEnabled] = useState(true)
 
-  // Apply theme whenever it changes
+  // Apply dark mode by default on mount
   useEffect(() => {
-    applyTheme(themePreset)
-  }, [themePreset])
-
-  useEffect(() => {
-    setGlow(glowEnabled)
-  }, [glowEnabled])
-
-  const setAppTheme = useCallback((presetId: string) => {
-    setThemePreset(presetId)
-  }, [])
-
-  const setAppGlow = useCallback((enabled: boolean) => {
-    setGlowEnabled(enabled)
+    applyUserTheme('dark', 'sky-blue')
   }, [])
 
   const navigateTo = useCallback((page: Page) => {
@@ -105,6 +103,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loginAsDemo = useCallback(() => {
+    applyUserTheme('dark', 'sky-blue')
     setUser(DEMO_USER)
     setIsDemoMode(true)
     setGoals(DEMO_GOALS)
@@ -122,6 +121,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
+    applyUserTheme('dark', 'sky-blue')
     setUser(null)
     setIsDemoMode(false)
     setIsPremium(false)
@@ -232,6 +232,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
 
       const showSocialCues = profile?.show_social_cues !== false // default true
+      const userTheme = profile?.theme ?? 'dark'
+      const userAccent = profile?.accent_color ?? 'sky-blue'
+      applyUserTheme(userTheme, userAccent)
 
       setUser({
         id: authData.user.id,
@@ -240,6 +243,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         avatar: userAvatar,
         isDemoUser: false,
         showSocialCues,
+        theme: userTheme,
+        accentColor: userAccent,
       })
 
       // Fetch existing goals
@@ -674,6 +679,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [user, reminders]);
 
+  const updateUserTheme = useCallback(async (theme: string, accentColor: string) => {
+    applyUserTheme(theme, accentColor)
+    setUser(prev => prev ? { ...prev, theme, accentColor } : null)
+    if (user && !user.isDemoMode) {
+      try {
+        await supabase.from('users').update({ theme, accent_color: accentColor }).eq('id', user.id)
+      } catch (err) {
+        console.error('Failed to persist theme:', err)
+      }
+    }
+  }, [user])
+
   const isAuthenticated = !!user
 
   return (
@@ -715,10 +732,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       incrementAiCalls,
       updateUserProfile,
       toggleSocialCues,
-      themePreset,
-      glowEnabled,
-      setAppTheme,
-      setAppGlow,
+      updateUserTheme,
     }}>
       {children}
     </AppContext.Provider>

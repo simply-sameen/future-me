@@ -59,11 +59,11 @@ export function AICoachModal({ goal, isOpen, onClose }: AICoachModalProps) {
     >
       <div
         className="relative max-w-lg w-full rounded-2xl overflow-hidden"
-        style={{ background: '#0A0A0A', border: '1px solid rgba(255,105,180,0.3)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}
+        style={{ background: 'var(--card)', border: '1px solid var(--border)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}
       >
         <div className="p-5 border-b flex items-center justify-between" style={{ borderBottomColor: '#262626' }}>
           <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-neon-pink" />
+            <Sparkles className="w-5 h-5" style={{ color: 'var(--user-accent)' }} />
             <div>
               <h3 className="font-bold text-foreground">AI Coach</h3>
               <p className="text-xs text-muted-foreground mt-0.5">{goal.title}</p>
@@ -79,7 +79,7 @@ export function AICoachModal({ goal, isOpen, onClose }: AICoachModalProps) {
 
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {!advice && !error && !isLoading && (
-            <div className="rounded-xl p-4" style={{ background: 'rgba(255,105,180,0.08)', border: '1px solid rgba(255,105,180,0.2)' }}>
+            <div className="rounded-xl p-4" style={{ background: 'color-mix(in srgb, var(--user-accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--user-accent) 20%, transparent)' }}>
               <p className="text-sm text-muted-foreground">
                 Get personalized coaching advice on how to optimize this goal's execution and timeline.
               </p>
@@ -96,9 +96,9 @@ export function AICoachModal({ goal, isOpen, onClose }: AICoachModalProps) {
           )}
 
           {advice && (
-            <div className="rounded-lg p-4 space-y-3" style={{ background: 'rgba(137,207,240,0.08)', border: '1px solid rgba(137,207,240,0.2)' }}>
+            <div className="rounded-lg p-4 space-y-3" style={{ background: 'color-mix(in srgb, var(--user-accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--user-accent) 20%, transparent)' }}>
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-neon-pink" />
+                <Sparkles className="w-4 h-4" style={{ color: 'var(--user-accent)' }} />
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Coaching Advice</p>
               </div>
               <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
@@ -113,7 +113,7 @@ export function AICoachModal({ goal, isOpen, onClose }: AICoachModalProps) {
             <Button
               onClick={fetchCoachAdvice}
               disabled={isLoading}
-              className="w-full h-10 btn-neon-pink border-none font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full h-10 btn-primary border-none font-bold disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>

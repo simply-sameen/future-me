@@ -10,6 +10,8 @@ export interface User {
   avatar?: string
   isDemoUser?: boolean
   showSocialCues?: boolean
+  theme?: string
+  accentColor?: string
 }
 
 export interface SubGoal {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Target, CircleCheck as CheckCircle2, Circle, ChevronDown, ChevronUp, Zap, Lock, Sparkles, Flame, Trash2, Pencil } from 'lucide-react'
+import { Plus, Target, CircleCheck as CheckCircle2, Circle, ChevronDown, ChevronUp, Sparkles, Lock, Flame, Trash2, Pencil } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Badge } from '../ui/badge'
@@ -7,60 +7,26 @@ import { useApp } from '../../contexts/AppContext'
 import { AICoachModal } from '../modals/AICoachModal'
 import type { Goal } from '../../types'
 
-const COLOR_CONFIG = {
-  pink: {
-    gradient: 'linear-gradient(135deg, rgba(255,105,180,0.15), rgba(255,105,180,0.05))',
-    border: 'rgba(255,105,180,0.25)',
-    glow: 'rgba(255,105,180,0.2)',
-    accent: '#FF69B4',
-    badge: 'rgba(255,105,180,0.15)',
-    badgeText: '#ff69b4',
-  },
-  blue: {
-    gradient: 'linear-gradient(135deg, rgba(137,207,240,0.15), rgba(137,207,240,0.05))',
-    border: 'rgba(137,207,240,0.25)',
-    glow: 'rgba(137,207,240,0.2)',
-    accent: '#89CFF0',
-    badge: 'rgba(137,207,240,0.15)',
-    badgeText: '#89CFF0',
-  },
-  green: {
-    gradient: 'linear-gradient(135deg, rgba(134,239,172,0.15), rgba(134,239,172,0.05))',
-    border: 'rgba(134,239,172,0.25)',
-    glow: 'rgba(134,239,172,0.2)',
-    accent: '#86efac',
-    badge: 'rgba(134,239,172,0.15)',
-    badgeText: '#86efac',
-  },
-}
+// Accent helper — all goal colours keyed off --user-accent
+const ACCENT = 'var(--user-accent)'
+const ACCENT_MIX = (p: number) => `color-mix(in srgb, var(--user-accent) ${p}%, transparent)`
 
 function GoalCard({ goal, onCoachClick, onEditClick }: { goal: Goal; onCoachClick: (goal: Goal) => void; onEditClick: (goal: Goal) => void }) {
   const { completeSubGoal, deleteGoal } = useApp()
   const [expanded, setExpanded] = useState(false)
-  const colors = COLOR_CONFIG[goal.color]
   const completedCount = goal.subGoals.filter(sg => sg.completed).length
 
   return (
     <div
-      className="rounded-xl p-5 transition-all duration-300 group"
-      style={{
-        background: colors.gradient,
-        border: `1px solid ${colors.border}`,
-      }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLElement).style.boxShadow = `0 0 30px ${colors.glow}`
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLElement).style.boxShadow = 'none'
-      }}
+      className="rounded-xl p-5 transition-all duration-300 group card-flat"
     >
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-            style={{ background: `${colors.accent}20`, border: `1px solid ${colors.accent}40` }}
+            style={{ background: ACCENT_MIX(12), border: `1px solid ${ACCENT_MIX(25)}` }}
           >
-            <Target className="w-4 h-4" style={{ color: colors.accent }} />
+            <Target className="w-4 h-4" style={{ color: ACCENT }} />
           </div>
           <div className="min-w-0">
             <h3 className="font-bold text-foreground text-base leading-snug mb-1 truncate">
@@ -72,25 +38,19 @@ function GoalCard({ goal, onCoachClick, onEditClick }: { goal: Goal; onCoachClic
         <div className="flex items-center gap-2 shrink-0">
           <Badge
             className="text-xs border-none"
-            style={{ background: colors.badge, color: colors.badgeText }}
+            style={{ background: ACCENT_MIX(12), color: ACCENT }}
           >
             {goal.category}
           </Badge>
           <button
-            onClick={e => {
-              e.stopPropagation()
-              onEditClick(goal)
-            }}
+            onClick={e => { e.stopPropagation(); onEditClick(goal) }}
             className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-500/20 rounded-lg"
             title="Edit goal"
           >
             <Pencil className="w-3.5 h-3.5 text-blue-400" />
           </button>
           <button
-            onClick={e => {
-              e.stopPropagation()
-              deleteGoal(goal.id)
-            }}
+            onClick={e => { e.stopPropagation(); deleteGoal(goal.id) }}
             className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 rounded-lg"
             title="Delete goal"
           >
@@ -103,44 +63,35 @@ function GoalCard({ goal, onCoachClick, onEditClick }: { goal: Goal; onCoachClic
         <div className="flex items-center justify-between text-xs mb-2">
           <span className="text-muted-foreground font-medium">Progress</span>
           <div className="flex items-center gap-2">
-            <span style={{ color: colors.accent }} className="font-bold">{goal.progress}%</span>
+            <span style={{ color: ACCENT }} className="font-bold">{goal.progress}%</span>
             <span className="text-muted-foreground">· ETC: {goal.etcDays}d</span>
           </div>
         </div>
-        <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: '#1A1A1A' }}>
+        <div className="w-full h-2 rounded-full overflow-hidden bg-muted">
           <div
             className="h-full rounded-full transition-all duration-1000"
-            style={{
-              width: `${goal.progress}%`,
-              background: `linear-gradient(90deg, ${colors.accent}, ${colors.accent}99)`,
-              boxShadow: `0 0 8px ${colors.accent}60`,
-            }}
+            style={{ width: `${goal.progress}%`, background: ACCENT }}
           />
         </div>
       </div>
 
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <CheckCircle2 className="w-3.5 h-3.5" style={{ color: colors.accent }} />
+          <CheckCircle2 className="w-3.5 h-3.5" style={{ color: ACCENT }} />
           <span>{completedCount}/{goal.subGoals.length} sub-goals</span>
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={e => {
-              e.stopPropagation()
-              setExpanded(!expanded)
-            }}
+            onClick={e => { e.stopPropagation(); setExpanded(!expanded) }}
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <span>{expanded ? 'Collapse' : 'View Plan'}</span>
             {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
           <button
-            onClick={e => {
-              e.stopPropagation()
-              onCoachClick(goal)
-            }}
-            className="px-2 py-1 rounded text-xs font-semibold bg-neon-pink/20 text-neon-pink hover:bg-neon-pink/30 transition-colors flex items-center gap-1"
+            onClick={e => { e.stopPropagation(); onCoachClick(goal) }}
+            className="px-2 py-1 rounded text-xs font-semibold transition-colors flex items-center gap-1"
+            style={{ background: ACCENT_MIX(15), color: ACCENT }}
             title="Ask AI Coach for advice"
           >
             <Sparkles className="w-3.5 h-3.5" />
@@ -152,7 +103,7 @@ function GoalCard({ goal, onCoachClick, onEditClick }: { goal: Goal; onCoachClic
       {expanded && (
         <div
           className="mt-4 pt-4 space-y-2"
-          style={{ borderTop: `1px solid ${colors.border}` }}
+          style={{ borderTop: `1px solid ${ACCENT_MIX(20)}` }}
         >
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             AI Deconstruction Plan
@@ -161,12 +112,12 @@ function GoalCard({ goal, onCoachClick, onEditClick }: { goal: Goal; onCoachClic
             <div
               key={sg.id}
               className="flex items-start gap-2.5 p-2.5 rounded-lg transition-colors cursor-pointer hover:opacity-80"
-              style={{ background: sg.completed ? `${colors.accent}08` : 'rgba(255,255,255,0.02)' }}
+              style={{ background: sg.completed ? ACCENT_MIX(8) : 'rgba(255,255,255,0.02)' }}
               onClick={() => completeSubGoal(goal.id, sg.id)}
             >
               <div className="shrink-0 mt-0.5">
                 {sg.completed ? (
-                  <CheckCircle2 className="w-4 h-4" style={{ color: colors.accent }} />
+                  <CheckCircle2 className="w-4 h-4" style={{ color: ACCENT }} />
                 ) : (
                   <Circle className="w-4 h-4 text-muted-foreground" />
                 )}
@@ -225,7 +176,6 @@ Motivation: ${motivation || 'Not specified'}`
       const data = await response.json()
       const text = data.response || ''
 
-      // Extract JSON from the response (handle markdown code blocks)
       const jsonMatch = text.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0])
@@ -244,7 +194,6 @@ Motivation: ${motivation || 'Not specified'}`
       }
     } catch (err) {
       console.error('Deconstruct error:', err)
-      // Fallback to default sub-goals if AI fails
       const fallbackSubGoals = [
         { id: `sg-${Date.now()}-1`, title: `Research and plan your approach to: ${title}`, completed: false, estimatedDays: 7 },
         { id: `sg-${Date.now()}-2`, title: 'Define measurable milestones and success criteria', completed: false, estimatedDays: 5 },
@@ -304,15 +253,15 @@ Motivation: ${motivation || 'Not specified'}`
       style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
     >
       <div
-        className="relative max-w-lg w-full rounded-2xl p-6 overflow-y-auto"
-        style={{ background: '#0A0A0A', border: '1px solid rgba(255,105,180,0.3)', maxHeight: '90vh' }}
+        className="relative max-w-lg w-full rounded-2xl p-6 overflow-y-auto card-flat"
+        style={{ maxHeight: '90vh' }}
       >
         <div className="flex items-center gap-3 mb-5">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: 'rgba(255,105,180,0.15)', border: '1px solid rgba(255,105,180,0.3)' }}
+            style={{ background: ACCENT_MIX(12), border: `1px solid ${ACCENT_MIX(25)}` }}
           >
-            <Sparkles className="w-5 h-5 text-neon-pink" />
+            <Sparkles className="w-5 h-5" style={{ color: ACCENT }} />
           </div>
           <div>
             <h3 className="font-bold text-foreground text-lg">{isEditing ? 'Edit Goal' : 'Goal Deconstructor'}</h3>
@@ -417,7 +366,7 @@ Motivation: ${motivation || 'Not specified'}`
           <Button
             onClick={handleGenerate}
             disabled={!title.trim() || isGenerating}
-            className="w-full h-11 text-sm font-bold btn-neon-pink rounded-lg border-none mb-3 disabled:opacity-50"
+            className="w-full h-11 text-sm font-bold btn-primary rounded-lg border-none mb-3 disabled:opacity-50"
           >
             {isGenerating ? (
               <div className="flex items-center gap-2">
@@ -434,16 +383,16 @@ Motivation: ${motivation || 'Not specified'}`
         ) : !isEditing ? (
           <div
             className="rounded-xl p-4 mb-4"
-            style={{ background: 'rgba(255,105,180,0.06)', border: '1px solid rgba(255,105,180,0.2)' }}
+            style={{ background: ACCENT_MIX(6), border: `1px solid ${ACCENT_MIX(20)}` }}
           >
             <div className="flex items-center gap-2 mb-3">
-              <Flame className="w-4 h-4 text-neon-pink" />
-              <p className="text-xs font-bold text-neon-pink">5 Sub-Goals Generated · ETC: 90 days</p>
+              <Flame className="w-4 h-4" style={{ color: ACCENT }} />
+              <p className="text-xs font-bold" style={{ color: ACCENT }}>5 Sub-Goals Generated · ETC: 90 days</p>
             </div>
-            <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: '#1A1A1A' }}>
+            <div className="h-2 w-full rounded-full overflow-hidden bg-muted">
               <div
-                className="progress-neon"
-                style={{ width: '0%', animation: 'progress-fill 1.5s ease-out forwards', '--progress-width': '100%' } as React.CSSProperties}
+                className="progress-bar animate-progress"
+                style={{ '--progress-width': '100%' } as React.CSSProperties}
               />
             </div>
           </div>
@@ -460,7 +409,7 @@ Motivation: ${motivation || 'Not specified'}`
           <Button
             onClick={handleSubmit}
             disabled={!title.trim()}
-            className="flex-1 h-10 btn-neon-pink border-none font-bold disabled:opacity-50"
+            className="flex-1 h-10 btn-primary border-none font-bold disabled:opacity-50"
           >
             {isEditing ? 'Save Changes' : 'Add Goal'}
           </Button>
@@ -478,10 +427,6 @@ export function GoalsView() {
 
   const FREE_LIMIT = 10
   const canAddGoal = isPremium || goals.length < FREE_LIMIT
-
-  const handleEditGoal = (goal: Goal) => {
-    setEditingGoal(goal)
-  }
 
   const handleCloseModal = () => {
     setShowAddModal(false)
@@ -501,18 +446,12 @@ export function GoalsView() {
         </div>
         <Button
           onClick={() => canAddGoal && setShowAddModal(true)}
-          className={`h-9 text-sm font-bold border-none rounded-lg flex items-center gap-1.5 ${canAddGoal ? 'btn-neon-pink' : 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground'}`}
+          className={`h-9 text-sm font-bold border-none rounded-lg flex items-center gap-1.5 ${canAddGoal ? 'btn-primary' : 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground'}`}
         >
           {canAddGoal ? (
-            <>
-              <Plus className="w-4 h-4" />
-              New Goal
-            </>
+            <><Plus className="w-4 h-4" />New Goal</>
           ) : (
-            <>
-              <Lock className="w-4 h-4" />
-              Limit Reached
-            </>
+            <><Lock className="w-4 h-4" />Limit Reached</>
           )}
         </Button>
       </div>
@@ -520,10 +459,10 @@ export function GoalsView() {
       {!isPremium && goals.length >= FREE_LIMIT && (
         <div
           className="rounded-xl p-4 mb-6 flex items-center justify-between gap-4"
-          style={{ background: 'rgba(255,105,180,0.05)', border: '1px solid rgba(255,105,180,0.2)' }}
+          style={{ background: ACCENT_MIX(5), border: `1px solid ${ACCENT_MIX(20)}` }}
         >
           <div className="flex items-center gap-3">
-            <Lock className="w-5 h-5 text-neon-pink shrink-0" />
+            <Lock className="w-5 h-5 shrink-0" style={{ color: ACCENT }} />
             <div>
               <p className="text-sm font-semibold text-foreground">Goal limit reached on Free Plan</p>
               <p className="text-xs text-muted-foreground">Upgrade to Premium for unlimited goals + analytics</p>
@@ -531,9 +470,8 @@ export function GoalsView() {
           </div>
           <Badge
             className="shrink-0 border-none font-bold"
-            style={{ background: 'rgba(255,105,180,0.2)', color: '#FF69B4' }}
+            style={{ background: ACCENT_MIX(18), color: ACCENT }}
           >
-            <Zap className="w-3 h-3 mr-1" />
             Upgrade
           </Badge>
         </div>
@@ -543,9 +481,9 @@ export function GoalsView() {
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div
             className="w-20 h-20 rounded-2xl flex items-center justify-center mb-5 animate-float"
-            style={{ background: 'rgba(255,105,180,0.08)', border: '1px solid rgba(255,105,180,0.2)' }}
+            style={{ background: ACCENT_MIX(8), border: `1px solid ${ACCENT_MIX(20)}` }}
           >
-            <Target className="w-10 h-10 text-neon-pink" />
+            <Target className="w-10 h-10" style={{ color: ACCENT }} />
           </div>
           <h3 className="text-xl font-bold text-foreground mb-2">Set Your First Goal</h3>
           <p className="text-sm text-muted-foreground max-w-xs mb-6">
@@ -553,7 +491,7 @@ export function GoalsView() {
           </p>
           <Button
             onClick={() => setShowAddModal(true)}
-            className="btn-neon-pink border-none h-10 px-6 font-bold"
+            className="btn-primary border-none h-10 px-6 font-bold"
           >
             <Plus className="w-4 h-4 mr-1.5" />
             Create Your First Goal
@@ -566,7 +504,7 @@ export function GoalsView() {
               key={goal.id}
               goal={goal}
               onCoachClick={setSelectedGoalForCoach}
-              onEditClick={handleEditGoal}
+              onEditClick={setEditingGoal}
             />
           ))}
         </div>

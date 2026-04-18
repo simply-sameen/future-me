@@ -32,26 +32,23 @@ export function MomentumModal() {
       }}
     >
       <div
-        className="relative max-w-md w-full rounded-2xl p-8 overflow-hidden"
+        className="relative max-w-md w-full rounded-2xl p-8 overflow-hidden card-flat"
         style={{
-          background: '#0A0A0A',
-          border: '1px solid rgba(137,207,240,0.3)',
-          boxShadow: '0 0 60px rgba(137,207,240,0.15), 0 0 120px rgba(137,207,240,0.07)',
           transform: visible ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(20px)',
           transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}
       >
+        {/* Subtle ambient tint — no glow */}
         <div
-          className="absolute inset-0 opacity-5 pointer-events-none"
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse at top, rgba(137,207,240,0.3) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse at top, var(--user-accent) 0%, transparent 70%)',
           }}
         />
 
         <button
           onClick={closeMomentumModal}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors z-10"
-          style={{ background: '#1A1A1A', border: '1px solid #262626' }}
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors z-10 card-flat"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -60,9 +57,12 @@ export function MomentumModal() {
           <div className="flex items-center gap-3 mb-6">
             <div
               className="w-12 h-12 rounded-xl flex items-center justify-center animate-float"
-              style={{ background: 'linear-gradient(135deg, rgba(137,207,240,0.2), rgba(255,105,180,0.2))', border: '1px solid rgba(137,207,240,0.3)' }}
+              style={{
+                background: 'color-mix(in srgb, var(--user-accent) 15%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--user-accent) 30%, transparent)',
+              }}
             >
-              <Sparkles className="w-6 h-6" style={{ color: '#89CFF0' }} />
+              <Sparkles className="w-6 h-6" style={{ color: 'var(--user-accent)' }} />
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-widest">Welcome Back</p>
@@ -74,9 +74,12 @@ export function MomentumModal() {
 
           <div
             className="rounded-xl p-5 mb-6"
-            style={{ background: 'rgba(137,207,240,0.05)', border: '1px solid rgba(137,207,240,0.15)' }}
+            style={{
+              background: 'color-mix(in srgb, var(--user-accent) 5%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--user-accent) 15%, transparent)',
+            }}
           >
-            <Quote className="w-5 h-5 mb-3" style={{ color: '#89CFF0', opacity: 0.6 }} />
+            <Quote className="w-5 h-5 mb-3" style={{ color: 'var(--user-accent)', opacity: 0.6 }} />
             <p className="text-base font-medium leading-relaxed text-foreground/90 italic">
               "{quote}"
             </p>
@@ -84,11 +87,14 @@ export function MomentumModal() {
 
           <div
             className="rounded-lg p-3 mb-6 flex items-center gap-3"
-            style={{ background: 'rgba(255,105,180,0.06)', border: '1px solid rgba(255,105,180,0.15)' }}
+            style={{
+              background: 'color-mix(in srgb, var(--user-accent) 6%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--user-accent) 15%, transparent)',
+            }}
           >
             <div
               className="w-2 h-2 rounded-full shrink-0"
-              style={{ background: '#FF69B4', boxShadow: '0 0 8px rgba(255,105,180,0.6)' }}
+              style={{ background: 'var(--user-accent)' }}
             />
             <p className="text-xs text-muted-foreground">
               Your future self sent you this reminder. Every step you take today shapes who you become.
@@ -97,10 +103,7 @@ export function MomentumModal() {
 
           <Button
             onClick={closeMomentumModal}
-            className="w-full h-12 text-base font-bold rounded-xl transition-all duration-300 border-none btn-neon-blue"
-            style={{
-              boxShadow: '0 0 25px rgba(137,207,240,0.5), 0 0 50px rgba(137,207,240,0.25)',
-            }}
+            className="w-full h-12 text-base font-bold rounded-xl border-none btn-primary"
           >
             <span>Take the Next Step</span>
             <ArrowRight className="w-5 h-5 ml-2" />

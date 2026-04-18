@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Mail, Lock, Zap, Sparkles, ArrowRight, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, Sparkles, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { useApp } from '../contexts/AppContext'
@@ -38,28 +38,33 @@ export function LoginPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden grid-pattern"
-      style={{ background: '#141414' }}
-    >
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
+
+      {/* Subtle ambient blobs — no neon, uses accent */}
       <div
-        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-5 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #FF69B4, transparent)', filter: 'blur(80px)' }}
+        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-[0.04] pointer-events-none"
+        style={{ background: 'radial-gradient(circle, var(--user-accent), transparent)', filter: 'blur(80px)' }}
       />
       <div
-        className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full opacity-5 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #89CFF0, transparent)', filter: 'blur(80px)' }}
+        className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full opacity-[0.04] pointer-events-none"
+        style={{ background: 'radial-gradient(circle, var(--user-accent), transparent)', filter: 'blur(100px)' }}
       />
 
       <div className="relative z-10 w-full max-w-md">
+
+        {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 animate-float"
-            style={{ background: 'linear-gradient(135deg, rgba(255,105,180,0.2), rgba(137,207,240,0.2))', border: '1px solid rgba(255,105,180,0.3)' }}
+          <div
+            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 animate-float"
+            style={{
+              background: 'color-mix(in srgb, var(--user-accent) 12%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--user-accent) 30%, transparent)',
+            }}
           >
-            <Sparkles className="w-8 h-8" style={{ color: '#FF69B4' }} />
+            <Sparkles className="w-7 h-7" style={{ color: 'var(--user-accent)' }} />
           </div>
-          <h1 className="text-4xl font-black tracking-tight mb-1">
-            <span className="shimmer-text">Future Me</span>
+          <h1 className="text-4xl font-black tracking-tight mb-1 text-foreground">
+            Future Me
           </h1>
           <p className="text-muted-foreground text-sm font-medium">Remind</p>
           <p className="text-muted-foreground text-xs mt-2 max-w-xs mx-auto">
@@ -67,38 +72,38 @@ export function LoginPage() {
           </p>
         </div>
 
+        {/* Demo CTA */}
         <button
           onClick={loginAsDemo}
-          className="w-full h-14 rounded-xl text-base font-black flex items-center justify-center gap-3 mb-6 relative overflow-hidden btn-neon-pink pulse-glow-pink group"
+          className="w-full h-14 rounded-xl text-base font-black flex items-center justify-center gap-3 mb-6 relative overflow-hidden btn-primary group transition-opacity"
           style={{ letterSpacing: '0.02em' }}
         >
           <div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.1), transparent)' }}
+            style={{ background: 'rgba(255,255,255,0.08)' }}
           />
-          <Zap className="w-6 h-6" />
-          <span>Enter Demo Mode</span>
           <ArrowRight className="w-5 h-5" />
+          <span>Enter Demo Mode</span>
         </button>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="flex-1 h-px" style={{ background: '#262626' }} />
+          <div className="flex-1 h-px bg-border" />
           <span className="text-xs text-muted-foreground">or continue with email</span>
-          <div className="flex-1 h-px" style={{ background: '#262626' }} />
+          <div className="flex-1 h-px bg-border" />
         </div>
 
-        <div
-          className="rounded-2xl p-6"
-          style={{ background: '#0A0A0A', border: '1px solid #262626' }}
-        >
-          <div className="flex rounded-lg overflow-hidden mb-5" style={{ background: '#141414', border: '1px solid #262626' }}>
+        {/* Auth Card */}
+        <div className="rounded-2xl p-6 card-flat">
+
+          {/* Sign In / Sign Up Toggle */}
+          <div className="flex rounded-lg overflow-hidden mb-5 bg-muted border border-border">
             <button
               onClick={() => setIsSignUp(false)}
               className="flex-1 py-2 text-sm font-semibold transition-all"
               style={{
-                background: !isSignUp ? 'rgba(255,105,180,0.15)' : 'transparent',
-                color: !isSignUp ? '#FF69B4' : '#888',
-                borderBottom: !isSignUp ? '2px solid #FF69B4' : '2px solid transparent',
+                background: !isSignUp ? 'color-mix(in srgb, var(--user-accent) 15%, transparent)' : 'transparent',
+                color: !isSignUp ? 'var(--user-accent)' : 'var(--muted-foreground)',
+                borderBottom: !isSignUp ? '2px solid var(--user-accent)' : '2px solid transparent',
               }}
             >
               Sign In
@@ -107,9 +112,9 @@ export function LoginPage() {
               onClick={() => setIsSignUp(true)}
               className="flex-1 py-2 text-sm font-semibold transition-all"
               style={{
-                background: isSignUp ? 'rgba(137,207,240,0.15)' : 'transparent',
-                color: isSignUp ? '#89CFF0' : '#888',
-                borderBottom: isSignUp ? '2px solid #89CFF0' : '2px solid transparent',
+                background: isSignUp ? 'color-mix(in srgb, var(--user-accent) 15%, transparent)' : 'transparent',
+                color: isSignUp ? 'var(--user-accent)' : 'var(--muted-foreground)',
+                borderBottom: isSignUp ? '2px solid var(--user-accent)' : '2px solid transparent',
               }}
             >
               Sign Up
@@ -165,7 +170,7 @@ export function LoginPage() {
           </div>
 
           <Button
-            className="w-full h-10 text-sm font-bold btn-neon-blue border-none rounded-lg"
+            className="w-full h-10 text-sm font-bold btn-primary border-none rounded-lg"
             onClick={handleAuth}
             disabled={isLoading}
           >
@@ -173,9 +178,9 @@ export function LoginPage() {
           </Button>
 
           <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 h-px" style={{ background: '#262626' }} />
+            <div className="flex-1 h-px bg-border" />
             <span className="text-xs text-muted-foreground">or</span>
-            <div className="flex-1 h-px" style={{ background: '#262626' }} />
+            <div className="flex-1 h-px bg-border" />
           </div>
 
           <Button
@@ -195,7 +200,7 @@ export function LoginPage() {
 
         <p className="text-center text-xs text-muted-foreground mt-6">
           Built by{' '}
-          <span className="text-neon-pink font-semibold">Divya and Team</span>
+          <span className="font-semibold" style={{ color: 'var(--user-accent)' }}>Divya and Team</span>
         </p>
       </div>
     </div>

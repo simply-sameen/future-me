@@ -13,13 +13,6 @@ const REPEAT_LABELS: Record<Reminder['repeat'], string> = {
   monthly: 'Monthly',
 }
 
-const REPEAT_COLORS: Record<Reminder['repeat'], string> = {
-  none: 'rgba(255,255,255,0.1)',
-  daily: 'rgba(255,105,180,0.15)',
-  weekly: 'rgba(137,207,240,0.15)',
-  monthly: 'rgba(134,239,172,0.15)',
-}
-
 function ReminderCard({ reminder, onToggle, onDelete, onEdit }: { reminder: Reminder; onToggle: () => void; onDelete: () => void; onEdit: () => void }) {
   const scheduledDate = new Date(reminder.scheduledDate)
   const formattedDate = scheduledDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -28,16 +21,8 @@ function ReminderCard({ reminder, onToggle, onDelete, onEdit }: { reminder: Remi
     <div
       className="rounded-xl p-4 transition-all duration-300 group"
       style={{
-        background: reminder.isActive ? 'rgba(255,105,180,0.05)' : '#0A0A0A',
-        border: `1px solid ${reminder.isActive ? 'rgba(255,105,180,0.2)' : '#262626'}`,
-      }}
-      onMouseEnter={e => {
-        if (reminder.isActive) {
-          (e.currentTarget as HTMLElement).style.boxShadow = '0 0 20px rgba(255,105,180,0.1)'
-        }
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLElement).style.boxShadow = 'none'
+        background: reminder.isActive ? 'color-mix(in srgb, var(--user-accent) 5%, transparent)' : 'var(--card)',
+        border: `1px solid ${reminder.isActive ? 'color-mix(in srgb, var(--user-accent) 20%, transparent)' : 'var(--border-color, #333)'}`
       }}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -45,11 +30,11 @@ function ReminderCard({ reminder, onToggle, onDelete, onEdit }: { reminder: Remi
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
             style={{
-              background: reminder.isActive ? 'rgba(255,105,180,0.15)' : '#1A1A1A',
-              border: `1px solid ${reminder.isActive ? 'rgba(255,105,180,0.3)' : '#262626'}`,
+              background: reminder.isActive ? 'color-mix(in srgb, var(--user-accent) 15%, transparent)' : 'var(--muted)',
+              border: `1px solid ${reminder.isActive ? 'color-mix(in srgb, var(--user-accent) 30%, transparent)' : 'var(--border)'}`,
             }}
           >
-            <Bell className="w-4 h-4" style={{ color: reminder.isActive ? '#FF69B4' : '#666' }} />
+            <Bell className="w-4 h-4" style={{ color: reminder.isActive ? 'var(--user-accent)' : '#666' }} />
           </div>
           <div className="min-w-0">
             <h4 className="font-semibold text-sm text-foreground leading-snug">{reminder.title}</h4>
@@ -76,7 +61,7 @@ function ReminderCard({ reminder, onToggle, onDelete, onEdit }: { reminder: Remi
             className="transition-colors"
           >
             {reminder.isActive ? (
-              <ToggleRight className="w-6 h-6" style={{ color: '#FF69B4' }} />
+              <ToggleRight className="w-6 h-6" style={{ color: 'var(--user-accent)' }} />
             ) : (
               <ToggleLeft className="w-6 h-6 text-muted-foreground" />
             )}
@@ -104,7 +89,7 @@ function ReminderCard({ reminder, onToggle, onDelete, onEdit }: { reminder: Remi
           {REPEAT_LABELS[reminder.repeat]}
         </Badge>
       </div>
-    </div>
+    </div >
   )
 }
 
@@ -147,14 +132,14 @@ function ReminderModal({ onClose, onAdd, onUpdate, editingReminder }: { onClose:
     >
       <div
         className="relative max-w-md w-full rounded-2xl p-6"
-        style={{ background: '#0A0A0A', border: '1px solid rgba(137,207,240,0.3)' }}
+        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
       >
         <div className="flex items-center gap-3 mb-5">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ background: 'rgba(137,207,240,0.15)', border: '1px solid rgba(137,207,240,0.3)' }}
           >
-            <Bell className="w-5 h-5 text-neon-blue" />
+            <Bell className="w-5 h-5" style={{ color: 'var(--user-accent)' }} />
           </div>
           <div>
             <h3 className="font-bold text-lg text-foreground">{isEditing ? 'Edit Reminder' : 'Schedule Reminder'}</h3>
@@ -221,9 +206,9 @@ function ReminderModal({ onClose, onAdd, onUpdate, editingReminder }: { onClose:
                   onClick={() => setRepeat(r)}
                   className="flex-1 py-1.5 rounded-lg text-xs font-medium transition-all"
                   style={{
-                    background: repeat === r ? 'rgba(137,207,240,0.2)' : '#141414',
-                    border: `1px solid ${repeat === r ? 'rgba(137,207,240,0.4)' : '#262626'}`,
-                    color: repeat === r ? '#89CFF0' : '#888',
+                    background: repeat === r ? 'color-mix(in srgb, var(--user-accent) 20%, transparent)' : 'var(--muted)',
+                    border: `1px solid ${repeat === r ? 'color-mix(in srgb, var(--user-accent) 40%, transparent)' : 'var(--border)'}`,
+                    color: repeat === r ? 'var(--user-accent)' : 'var(--muted-foreground)',
                   }}
                 >
                   {REPEAT_LABELS[r]}
@@ -244,7 +229,7 @@ function ReminderModal({ onClose, onAdd, onUpdate, editingReminder }: { onClose:
           <Button
             onClick={handleSubmit}
             disabled={!title.trim() || !date}
-            className="flex-1 h-10 btn-neon-blue border-none font-bold disabled:opacity-50"
+            className="flex-1 h-10 btn-primary border-none font-bold disabled:opacity-50"
           >
             {isEditing ? 'Update' : 'Schedule'}
           </Button>
@@ -277,7 +262,7 @@ export function RemindersView() {
         </div>
         <Button
           onClick={() => setShowModal(true)}
-          className="h-9 text-sm font-bold border-none rounded-lg btn-neon-blue flex items-center gap-1.5"
+          className="h-9 text-sm font-bold border-none rounded-lg btn-primary flex items-center gap-1.5"
         >
           <Plus className="w-4 h-4" />
           New Reminder
@@ -288,9 +273,9 @@ export function RemindersView() {
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div
             className="w-20 h-20 rounded-2xl flex items-center justify-center mb-5 animate-float"
-            style={{ background: 'rgba(137,207,240,0.08)', border: '1px solid rgba(137,207,240,0.2)' }}
+            style={{ background: 'color-mix(in srgb, var(--user-accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--user-accent) 20%, transparent)' }}
           >
-            <Bell className="w-10 h-10 text-neon-blue" />
+            <Bell className="w-10 h-10" style={{ color: 'var(--user-accent)' }} />
           </div>
           <h3 className="text-xl font-bold text-foreground mb-2">No Reminders Yet</h3>
           <p className="text-sm text-muted-foreground max-w-xs mb-6">
@@ -298,7 +283,7 @@ export function RemindersView() {
           </p>
           <Button
             onClick={() => setShowModal(true)}
-            className="btn-neon-blue border-none h-10 px-6 font-bold"
+            className="btn-primary border-none h-10 px-6 font-bold"
           >
             <Plus className="w-4 h-4 mr-1.5" />
             Schedule First Reminder

@@ -31,14 +31,14 @@ export function APIKeyModal({ onSubmit, isOpen }: APIKeyModalProps) {
     >
       <div
         className="relative max-w-lg w-full rounded-2xl p-6 overflow-hidden"
-        style={{ background: '#0A0A0A', border: '1px solid rgba(255,105,180,0.3)' }}
+        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
       >
         <div className="flex items-center gap-3 mb-5">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: 'rgba(255,105,180,0.15)', border: '1px solid rgba(255,105,180,0.3)' }}
+            style={{ background: 'color-mix(in srgb, var(--user-accent) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--user-accent) 25%, transparent)' }}
           >
-            <Sparkles className="w-5 h-5 text-neon-pink" />
+            <Sparkles className="w-5 h-5" style={{ color: 'var(--user-accent)' }} />
           </div>
           <div>
             <h3 className="font-bold text-foreground text-lg">Set up AI Assistant</h3>
@@ -47,7 +47,7 @@ export function APIKeyModal({ onSubmit, isOpen }: APIKeyModalProps) {
         </div>
 
         <div className="space-y-4 mb-6">
-          <div className="rounded-xl p-4" style={{ background: 'rgba(137,207,240,0.08)', border: '1px solid rgba(137,207,240,0.2)' }}>
+          <div className="rounded-xl p-4" style={{ background: 'color-mix(in srgb, var(--user-accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--user-accent) 20%, transparent)' }}>
             <div className="flex items-start gap-3">
               <AlertCircle className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
               <div className="text-xs text-muted-foreground">
@@ -72,7 +72,7 @@ export function APIKeyModal({ onSubmit, isOpen }: APIKeyModalProps) {
             />
           </div>
 
-          <div className="rounded-xl p-3" style={{ background: 'rgba(255,105,180,0.05)', border: '1px solid rgba(255,105,180,0.2)' }}>
+          <div className="rounded-xl p-3" style={{ background: 'var(--muted)', border: '1px solid var(--border)' }}>
             <div className="flex items-start gap-2">
               <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
               <p className="text-[10px] text-muted-foreground">
@@ -95,7 +95,7 @@ export function APIKeyModal({ onSubmit, isOpen }: APIKeyModalProps) {
           <Button
             onClick={handleSubmit}
             disabled={!apiKey.trim() || isSubmitting}
-            className="flex-1 h-10 btn-neon-pink border-none font-bold disabled:opacity-50"
+            className="flex-1 h-10 btn-primary border-none font-bold disabled:opacity-50"
           >
             {isSubmitting ? 'Saving...' : 'Save API Key'}
           </Button>

@@ -79,11 +79,11 @@ Provide a concise, actionable response.`
     >
       <div
         className="relative max-w-lg w-full rounded-2xl overflow-hidden"
-        style={{ background: '#0A0A0A', border: '1px solid rgba(255,105,180,0.3)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}
+        style={{ background: 'var(--card)', border: '1px solid var(--border)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}
       >
         <div className="p-5 border-b flex items-center justify-between" style={{ borderBottomColor: '#262626' }}>
           <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-neon-pink" />
+            <Sparkles className="w-5 h-5" style={{ color: 'var(--user-accent)' }} />
             <div>
               <h3 className="font-bold text-foreground">AI Assistant</h3>
               <p className="text-xs text-muted-foreground mt-0.5">{goal.title}</p>
@@ -101,7 +101,7 @@ Provide a concise, actionable response.`
 
 
           {response && (
-            <div className="rounded-lg p-4" style={{ background: 'rgba(137,207,240,0.08)', border: '1px solid rgba(137,207,240,0.2)' }}>
+            <div className="rounded-lg p-4" style={{ background: 'color-mix(in srgb, var(--user-accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--user-accent) 20%, transparent)' }}>
               <p className="text-sm text-foreground leading-relaxed">{response}</p>
             </div>
           )}
@@ -125,7 +125,7 @@ Provide a concise, actionable response.`
           <Button
             onClick={handleAsk}
             disabled={!query.trim() || isLoading}
-            className="w-full h-10 btn-neon-pink border-none font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full h-10 btn-primary border-none font-bold disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>

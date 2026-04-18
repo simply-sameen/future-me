@@ -86,8 +86,8 @@ export function AIAssistantView() {
   return (
     <div className="flex flex-col h-full bg-[#313338] text-[#dbdee1] rounded-lg overflow-hidden">
       <div className="p-4 border-b border-[#2b2d31] shadow-sm flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-neon-pink/20 flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-neon-pink" />
+        <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--user-accent) 18%, transparent)' }}>
+          <Sparkles className="w-4 h-4" style={{ color: 'var(--user-accent)' }} />
         </div>
         <div>
           <h2 className="text-xl font-bold text-white">AI Assistant</h2>
@@ -114,7 +114,7 @@ export function AIAssistantView() {
               >
                 <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden bg-[#2b2d31] mt-1">
                   {isAI ? (
-                    <Sparkles className="w-5 h-5 text-neon-pink" />
+                    <Sparkles className="w-5 h-5" style={{ color: 'var(--user-accent)' }} />
                   ) : (
                     <div className="w-full h-full bg-indigo-500 flex items-center justify-center text-white font-bold">
                       U
@@ -139,7 +139,7 @@ export function AIAssistantView() {
         {isLoading && (
           <div className="flex gap-4 px-4 py-2 mt-2">
             <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-[#2b2d31]">
-              <Sparkles className="w-5 h-5 text-neon-pink animate-pulse" />
+              <Sparkles className="w-5 h-5 animate-pulse" style={{ color: 'var(--user-accent)' }} />
             </div>
             <div className="flex-1 min-w-0 flex items-center">
               <div className="flex gap-1.5">
