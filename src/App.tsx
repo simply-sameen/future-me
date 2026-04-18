@@ -1,5 +1,5 @@
 import { AppProvider, useApp } from './contexts/AppContext'
-import { LoginPage } from './pages/LoginPage'
+import { LandingPage } from './pages/LandingPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { AdminPage } from './pages/AdminPage'
 
@@ -7,14 +7,14 @@ function Router() {
   const { currentPage } = useApp()
 
   switch (currentPage) {
-    case 'login':
-      return <LoginPage />
+    case 'landing':
+      return <LandingPage />
     case 'dashboard':
       return <DashboardPage />
     case 'admin':
       return <AdminPage />
     default:
-      return <LoginPage />
+      return <LandingPage />
   }
 }
 

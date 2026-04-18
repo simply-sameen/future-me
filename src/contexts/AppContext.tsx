@@ -81,7 +81,7 @@ function applyUserTheme(theme: string, accentColor: string) {
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [currentPage, setCurrentPage] = useState<Page>('login')
+  const [currentPage, setCurrentPage] = useState<Page>('landing')
   const [user, setUser] = useState<User | null>(null)
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [isPremium, setIsPremium] = useState(false)

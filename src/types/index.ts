@@ -1,4 +1,4 @@
-export type Page = 'login' | 'dashboard' | 'admin'
+export type Page = 'landing' | 'login' | 'dashboard' | 'admin'
 export type DashboardTab = 'reminders' | 'goals' | 'calendar' | 'analytics' | 'ai-assistant'
 export type PlanTier = 'free' | 'premium'
 export type TickerCategory = 'missing-person' | 'help-a-life' | 'community'
