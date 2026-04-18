@@ -84,19 +84,19 @@ export function AIAssistantView() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#313338] text-[#dbdee1] rounded-lg overflow-hidden">
-      <div className="p-4 border-b border-[#2b2d31] shadow-sm flex items-center gap-3">
+    <div className="flex flex-col h-full bg-titanium-muted dark:bg-midnight-muted text-notion-text-light dark:text-notion-text-dark rounded-lg overflow-hidden">
+      <div className="p-4 border-b border-border shadow-sm flex items-center gap-3">
         <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--user-accent) 18%, transparent)' }}>
           <Sparkles className="w-4 h-4" style={{ color: 'var(--user-accent)' }} />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-white">AI Assistant</h2>
+          <h2 className="text-xl font-bold text-foreground">AI Assistant</h2>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-1 py-4">
         {displayMessages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full py-12 text-center text-[#949ba4]">
+          <div className="flex flex-col items-center justify-center h-full py-12 text-center text-muted-foreground">
             <MessageCircle className="w-12 h-12 mb-3 opacity-50" />
             <p>Start a conversation about your goals</p>
           </div>
@@ -110,9 +110,9 @@ export function AIAssistantView() {
             return (
               <div
                 key={message.id}
-                className="group flex gap-4 px-4 py-1 hover:bg-[#2b2d31] transition-colors"
+                className="group flex gap-4 px-4 py-1 hover:bg-muted transition-colors"
               >
-                <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden bg-[#2b2d31] mt-1">
+                <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden bg-muted mt-1">
                   {isAI ? (
                     <Sparkles className="w-5 h-5" style={{ color: 'var(--user-accent)' }} />
                   ) : (
@@ -123,10 +123,10 @@ export function AIAssistantView() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="font-medium text-white hover:underline cursor-pointer">
+                    <span className="font-medium text-foreground hover:underline cursor-pointer">
                       {isAI ? 'AI Coach' : 'You'}
                     </span>
-                    <span className="text-xs text-[#949ba4] font-medium">{timeString}</span>
+                    <span className="text-xs text-muted-foreground font-medium">{timeString}</span>
                   </div>
                   <div className="text-[15px] leading-relaxed whitespace-pre-wrap">
                     {message.content}
@@ -138,14 +138,14 @@ export function AIAssistantView() {
         )}
         {isLoading && (
           <div className="flex gap-4 px-4 py-2 mt-2">
-            <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-[#2b2d31]">
+            <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-muted">
               <Sparkles className="w-5 h-5 animate-pulse" style={{ color: 'var(--user-accent)' }} />
             </div>
             <div className="flex-1 min-w-0 flex items-center">
               <div className="flex gap-1.5">
-                <div className="w-2 h-2 bg-[#dbdee1] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-[#dbdee1] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-[#dbdee1] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -153,7 +153,7 @@ export function AIAssistantView() {
       </div>
 
       <div className="px-4 pb-6 pt-2">
-        <div className="flex items-center gap-2 bg-[#383a40] rounded-lg px-4 py-1">
+        <div className="flex items-center gap-2 bg-titanium dark:bg-midnight rounded-lg px-4 py-1 border border-border">
           <input
             type="text"
             placeholder="Message AI Coach..."
@@ -166,12 +166,12 @@ export function AIAssistantView() {
               }
             }}
             disabled={isLoading}
-            className="flex-1 bg-transparent border-none text-[#dbdee1] placeholder:text-[#949ba4] focus:outline-none py-2.5"
+            className="flex-1 bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none py-2.5"
           />
           <button
             onClick={handleSendMessage}
             disabled={!input.trim() || isLoading}
-            className="p-2 text-[#b5bac1] hover:text-[#dbdee1] disabled:opacity-50 transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
           >
             <Send className="w-5 h-5" />
           </button>

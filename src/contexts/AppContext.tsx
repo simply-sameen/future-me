@@ -66,11 +66,11 @@ const AppContext = createContext<AppContextValue | undefined>(undefined)
 /* ── Accent map: DB value → hex ── */
 const ACCENT_MAP: Record<string, string> = {
   'lavender': '#e8daf9',
-  'yellow':   '#ffc95e',
-  'orange':   '#f57362',
+  'yellow': '#ffc95e',
+  'orange': '#f57362',
   'sky-blue': '#61adee',
-  'teal':     '#2a9d99',
-  'brown':    '#b18164',
+  'teal': '#2a9d99',
+  'brown': '#b18164',
 }
 
 function applyUserTheme(theme: string, accentColor: string) {
@@ -158,7 +158,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     if (data.user) {
       const avatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + email
-      
+
       // Insert to our users table upon registration
       const { error: insertError } = await supabase.from('users').insert({
         id: data.user.id,
@@ -445,9 +445,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const completedCount = updatedSubGoals.filter(sg => sg.completed).length
       const newProgress = Math.round((completedCount / updatedSubGoals.length) * 100)
 
-      supabase.from('goals').update({ 
-        sub_goals: updatedSubGoals, 
-        progress: newProgress 
+      supabase.from('goals').update({
+        sub_goals: updatedSubGoals,
+        progress: newProgress
       }).eq('id', goalId).then(({ error }) => {
         if (error) {
           toast.error(`Database Error: ${error.message}`);
@@ -507,7 +507,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setReminders(prev => {
       const reminder = prev.find(r => r.id === id)
       if (!reminder) return prev
-      
+
       const newIsActive = !reminder.isActive
       supabase.from('reminders').update({ is_active: newIsActive }).eq('id', id).then(({ error }) => {
         if (error) {
@@ -646,7 +646,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           const reminderTimeFormatted = reminder.scheduledTime?.substring(0, 5);
           const isMatch = (reminder.scheduledDate === localDate && reminderTimeFormatted === currentTime);
           // prevent duplicate triggers within the same minute for the same reminder
-          const alreadyTriggered = prev.some(n => 
+          const alreadyTriggered = prev.some(n =>
             n.id.startsWith(reminder.id) && n.time.includes(localDate) && n.time.includes(currentTime)
           );
 
@@ -682,7 +682,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateUserTheme = useCallback(async (theme: string, accentColor: string) => {
     applyUserTheme(theme, accentColor)
     setUser(prev => prev ? { ...prev, theme, accentColor } : null)
-    if (user && !user.isDemoMode) {
+    if (user && !user.isDemoUser) {
       try {
         await supabase.from('users').update({ theme, accent_color: accentColor }).eq('id', user.id)
       } catch (err) {

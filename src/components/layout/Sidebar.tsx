@@ -26,18 +26,18 @@ export function Sidebar() {
   return (
     <aside
       className="flex flex-col w-64 h-full border-r shrink-0"
-      style={{ background: '#0A0A0A', borderRightColor: '#262626' }}
+      style={{ background: 'var(--card)', borderRightColor: 'var(--border)' }}
     >
-      <div className="p-5 border-b" style={{ borderBottomColor: '#262626' }}>
+      <div className="p-5 border-b" style={{ borderBottomColor: 'var(--border)' }}>
         <div className="flex items-center gap-2.5">
           <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #FF69B4, #89CFF0)' }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: 'var(--user-accent)' }}
           >
-            <Sparkles className="w-4 h-4 text-black" />
+            <Sparkles className="w-4 h-4" style={{ color: 'var(--primary-foreground)' }} />
           </div>
           <div>
-            <h1 className="text-sm font-bold tracking-tight shimmer-text">Future Me</h1>
+            <h1 className="text-sm font-bold tracking-tight">Future Me</h1>
             <p className="text-[10px] text-muted-foreground">Remind</p>
           </div>
         </div>
@@ -63,16 +63,13 @@ export function Sidebar() {
                 w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
                 transition-all duration-200 relative group
                 ${isActive
-                  ? 'text-black'
+                  ? 'text-primary-foreground font-bold'
                   : isLocked
                     ? 'text-muted-foreground cursor-not-allowed opacity-50'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-[#1A1A1A]'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 }
               `}
-              style={isActive ? {
-                background: 'linear-gradient(135deg, #FF69B4, #ff4da6)',
-                boxShadow: '0 0 15px rgba(255,105,180,0.4)',
-              } : {}}
+              style={isActive ? { background: 'var(--user-accent)', color: 'var(--primary-foreground)' } : {}}
             >
               <Icon className="w-4 h-4 shrink-0" />
               <span>{item.label}</span>
@@ -82,35 +79,35 @@ export function Sidebar() {
               {item.id === 'goals' && !isActive && activeGoalCount > 0 && (
                 <Badge
                   className="ml-auto text-[10px] h-4 px-1.5 border-none"
-                  style={{ background: 'rgba(255,105,180,0.15)', color: '#FF69B4' }}
+                  style={{ background: 'color-mix(in srgb, var(--user-accent) 15%, transparent)', color: 'var(--user-accent)' }}
                 >
                   {activeGoalCount}
                 </Badge>
               )}
               {item.premiumOnly && !isLocked && !isActive && (
-                <Zap className="w-3 h-3 ml-auto text-[#89CFF0]" />
+                <Zap className="w-3 h-3 ml-auto" style={{ color: 'var(--user-accent)' }} />
               )}
             </button>
           )
         })}
       </nav>
 
-      <div className="p-4 border-t" style={{ borderTopColor: '#262626' }}>
+      <div className="p-4 border-t" style={{ borderTopColor: 'var(--border)' }}>
         {isPremium ? (
           <div
             className="rounded-lg p-3"
-            style={{ background: 'linear-gradient(135deg, rgba(255,105,180,0.1), rgba(137,207,240,0.1))', border: '1px solid rgba(255,105,180,0.2)' }}
+            style={{ background: 'color-mix(in srgb, var(--user-accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--user-accent) 20%, transparent)' }}
           >
             <div className="flex items-center gap-2 mb-1">
-              <Zap className="w-3.5 h-3.5 text-neon-pink" />
-              <span className="text-xs font-bold text-neon-pink">Premium Active</span>
+              <Zap className="w-3.5 h-3.5" style={{ color: 'var(--user-accent)' }} />
+              <span className="text-xs font-bold" style={{ color: 'var(--user-accent)' }}>Premium Active</span>
             </div>
             <p className="text-[10px] text-muted-foreground">All features unlocked</p>
           </div>
         ) : (
           <div
-            className="rounded-lg p-3 cursor-pointer transition-all hover:border-[rgba(255,105,180,0.3)]"
-            style={{ background: '#141414', border: '1px solid #262626' }}
+            className="rounded-lg p-3 cursor-pointer transition-all hover:bg-muted"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
           >
             <div className="flex items-center gap-2 mb-1">
               <Lock className="w-3.5 h-3.5 text-muted-foreground" />

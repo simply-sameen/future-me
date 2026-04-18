@@ -81,8 +81,7 @@ function ReminderCard({ reminder, onToggle, onDelete, onEdit }: { reminder: Remi
         <Badge
           className="text-[10px] border-none px-2"
           style={{
-            background: REPEAT_COLORS[reminder.repeat],
-            color: reminder.repeat === 'none' ? '#888' : reminder.repeat === 'daily' ? '#FF69B4' : reminder.repeat === 'weekly' ? '#89CFF0' : '#86efac',
+            backgroundColor: 'var(--user-accent)'
           }}
         >
           <Repeat className="w-2.5 h-2.5 mr-1" />

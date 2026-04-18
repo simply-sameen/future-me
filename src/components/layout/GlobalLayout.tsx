@@ -69,7 +69,7 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#141414' }}>
+    <div className="flex flex-col h-screen overflow-hidden bg-background">
       {hasTicker && <NewsTicker />}
 
       <div className="flex flex-1 overflow-hidden">
@@ -92,7 +92,7 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <header
             className="flex items-center justify-between px-4 md:px-6 h-14 border-b shrink-0"
-            style={{ background: '#0A0A0A', borderBottomColor: '#262626' }}
+            style={{ background: 'var(--card)', borderBottomColor: 'var(--border)' }}
           >
             <div className="flex items-center gap-3">
               <button
@@ -111,14 +111,14 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
               <div ref={notificationsRef} className="relative">
                 <button
                   className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors relative"
-                  style={{ background: '#141414', border: '1px solid #262626' }}
+                  style={{ background: 'var(--muted)', border: '1px solid var(--border)' }}
                   onClick={toggleNotifications}
                 >
                   <Bell className="w-4 h-4" />
                   {hasUnreadNotifications && (
                     <span
                       className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full"
-                      style={{ background: '#FF69B4' }}
+                      style={{ background: 'var(--user-accent)' }}
                     />
                   )}
                 </button>
@@ -157,7 +157,7 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto" style={{ background: '#141414' }}>
+          <main className="flex-1 overflow-y-auto bg-background">
             <div className="h-full">
               {children}
             </div>

@@ -1,12 +1,5 @@
-import { TriangleAlert as AlertTriangle, Heart, Users } from 'lucide-react'
+import { Megaphone } from 'lucide-react'
 import { useApp } from '../../contexts/AppContext'
-import type { TickerCategory } from '../../types'
-
-const categoryConfig: Record<TickerCategory, { icon: typeof AlertTriangle; color: string; label: string }> = {
-  'missing-person': { icon: AlertTriangle, color: '#FF69B4', label: 'ALERT' },
-  'help-a-life': { icon: Heart, color: '#89CFF0', label: 'HELP' },
-  'community': { icon: Users, color: '#a8e6a3', label: 'COMMUNITY' },
-}
 
 export function NewsTicker() {
   const { tickers } = useApp()
@@ -15,16 +8,11 @@ export function NewsTicker() {
 
   const tickerText = tickers.map(t => `  •  ${t.message}`).join('')
 
-  const firstTicker = tickers[0]
-  const config = categoryConfig[firstTicker.category]
-  const Icon = config.icon
-
   return (
     <div
-      className="relative overflow-hidden border-b"
+      className="relative overflow-hidden border-b border-transparent"
       style={{
-        backgroundColor: 'rgba(10,10,10,0.95)',
-        borderBottomColor: config.color + '40',
+        backgroundColor: 'var(--user-accent)',
         height: '36px',
       }}
     >
@@ -32,20 +20,17 @@ export function NewsTicker() {
         <div
           className="flex items-center gap-1.5 px-3 shrink-0 h-full z-10"
           style={{
-            backgroundColor: config.color + '20',
-            borderRight: `1px solid ${config.color}40`,
+            backgroundColor: 'rgba(0,0,0,0.12)',
+            borderRight: '1px solid rgba(255,255,255,0.15)',
           }}
         >
-          <Icon className="w-3.5 h-3.5" style={{ color: config.color }} />
-          <span
-            className="text-xs font-bold tracking-widest"
-            style={{ color: config.color }}
-          >
-            {config.label}
+          <Megaphone className="w-3.5 h-3.5 text-white" />
+          <span className="text-xs font-bold tracking-widest text-white">
+            ANNOUNCEMENT
           </span>
         </div>
         <div className="overflow-hidden flex-1">
-          <div className="animate-ticker inline-block text-xs text-muted-foreground py-0.5">
+          <div className="animate-ticker inline-block text-xs text-white/90 font-medium py-0.5">
             {tickerText}{tickerText}
           </div>
         </div>

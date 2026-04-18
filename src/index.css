@@ -44,7 +44,7 @@
   /* ── Notion-style named palette tokens ── */
   --color-midnight:          #141414;
   --color-midnight-muted:    #202020;
-  --color-titanium:          #FFFFFF;
+  --color-titanium:          #F9F9F9;
   --color-titanium-muted:    #F7F7F5;
   --color-notion-text-dark:  #D4D4D4;
   --color-notion-text-light: #37352F;
@@ -101,7 +101,7 @@
 
 /* ── Light mode overrides — active when <html class="light"> ── */
 html.light {
-  --background:              #FFFFFF;
+  --background:              #F9F9F9;
   --foreground:              #37352F;
   --card:                    #F7F7F5;
   --card-foreground:         #37352F;
